@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#060b16">
+<meta name="description" content="Bài thuyết trình dự án STEM — Mô hình Nhà Thông Minh: mục tiêu, vật liệu, kiến trúc, quy trình 6 bước, tính năng và yêu cầu sản phẩm.">
+<title>Bài thuyết trình — Nhà Thông Minh | Dự án STEM</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="assets/css/presentation.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+</head>
+
+<body>
+
+<!-- ===== NỀN ===== -->
+<div class="p-bg" aria-hidden="true">
+  <div class="p-bg__grad"></div>
+  <div class="p-bg__grid"></div>
+  <canvas class="p-bg__canvas" id="p-canvas"></canvas>
+  <div class="p-bg__scan"></div>
+</div>
+
+<!-- ===== TIẾN TRÌNH ===== -->
+<div class="p-progress" aria-hidden="true"></div>
+
+<!-- ===== HEADER ===== -->
+<header class="p-header">
+  <a class="p-header__brand" href="index.html">
+    <span class="p-header__logo">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 11l9-7 9 7"/>
+        <path d="M5 10v10h14V10"/>
+        <path d="M10 20v-6h4v6"/>
+      </svg>
+    </span>
+    <span>Nhà Thông Minh</span>
+  </a>
+
+  <div class="p-header__right">
+    <span class="p-chip"><i></i> Đang trình bày</span>
+    <button class="p-icon-btn p-icon-btn--home" type="button" aria-label="Về trang giới thiệu" title="Trang giới thiệu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>
+    </button>
+    <button class="p-icon-btn p-icon-btn--print" type="button" aria-label="In bài thuyết trình" title="In / Xuất PDF">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="6" y="14" width="12" height="7"/><path d="M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/></svg>
+    </button>
+    <button class="p-icon-btn p-icon-btn--overview" type="button" aria-label="Xem tất cả các slide" title="Tổng quan (O)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    </button>
+    <button class="p-icon-btn p-icon-btn--fullscreen" type="button" aria-label="Bật toàn màn hình" title="Toàn màn hình (F)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- ===== SECTION RAIL ===== -->
+<nav class="p-rail" aria-label="Danh sách slide"></nav>
+
+<!-- ===== KHUNG SLIDE ===== -->
+<main class="p-stage">
+  <div class="p-slides" id="p-slides">
+
+    <!-- ============ SLIDE 1 — BÌA ============ -->
+    <section class="p-slide" data-title="Bìa" aria-hidden="true">
+      <div class="p-slide__inner">
+        <div class="p-cover">
+          <span class="p-cover__badge" data-s data-depth="0.95">Dự án STEM · Mô hình thực tế</span>
+          <h1 class="p-cover__title" data-depth="0.88">
+            <span data-s>NHÀ</span>
+            <span class="p-grad" data-s>THÔNG MINH</span>
+          </h1>
+          <p class="p-cover__sub" data-s>
+            Mô hình ngôi nhà tự động ứng dụng IoT — một sáng kiến nhỏ
+            mang ý nghĩa lớn cho cộng đồng và môi trường giáo dục.
+          </p>
+          <div class="p-cover__meta" data-s data-depth="0.62">
+            <span>Lớp: ............</span>
+            <span>Nhóm: ............</span>
+            <span>Trường: ............</span>
+          </div>
+          <div class="p-cover__hint" data-s data-depth="0.55">
+            <kbd>→</kbd> để tiếp tục · <kbd>O</kbd> xem tổng quan
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 2 — MỤC TIÊU ============ -->
+    <section class="p-slide" data-title="Mục tiêu" aria-hidden="true">
+      <div class="p-slide__inner">
+        <span class="p-eyebrow" data-s data-depth="0.92">01 — Mục tiêu</span>
+        <h2 class="p-title" data-s data-depth="0.84">Ba mục tiêu của <span class="p-grad">dự án</span></h2>
+        <p class="p-lead" data-s data-depth="0.68">
+          Dự án không chỉ dừng lại ở một sản phẩm để trưng bày, mà hướng đến
+          ba giá trị bền vững: kiến thức thực hành, tư duy sáng tạo và đóng góp thực cho cộng đồng.
+        </p>
+
+        <div class="p-grid p-grid--3">
+          <article class="p-card" data-s data-depth="0.55">
+            <span class="p-card__num">01</span>
+            <div class="p-card__icon p-card__icon--green">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/></svg>
+            </div>
+            <h4>Ứng dụng IoT thực tế</h4>
+            <p>
+              Mô hình vận hành theo đúng nguyên lý của nhà thông minh thật:
+              cảm biến thu thập dữ liệu, vi điều khiển xử lý và điều khiển thiết bị tự động.
+            </p>
+          </article>
+
+          <article class="p-card" data-s data-depth="0.55">
+            <span class="p-card__num">02</span>
+            <div class="p-card__icon p-card__icon--cyan">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.4 5.6L20 10l-4 4.2.9 5.8L12 17.3 7.1 20l.9-5.8L4 10l5.6-1.4z"/></svg>
+            </div>
+            <h4>Kích thích tư duy sáng tạo</h4>
+            <p>
+              Rèn luyện tư duy thiết kế, giải quyết vấn đề và kỹ năng làm việc nhóm
+              xuyên suốt từ ý tưởng đến sản phẩm hoàn chỉnh.
+            </p>
+          </article>
+
+          <article class="p-card" data-s data-depth="0.55">
+            <span class="p-card__num">03</span>
+            <div class="p-card__icon p-card__icon--pink">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/></svg>
+            </div>
+            <h4>Phục vụ cộng đồng</h4>
+            <p>
+              Hướng tới nhu cầu thực tiễn: tiết kiệm điện năng, an toàn gia đình
+              và hỗ trợ người lớn tuổi theo dõi sức khỏe từ xa.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 3 — VẬT LIỆU ============ -->
+    <section class="p-slide" data-title="Vật liệu" aria-hidden="true">
+      <div class="p-slide__inner">
+        <span class="p-eyebrow" data-s data-depth="0.92">02 — Vật liệu</span>
+        <h2 class="p-title" data-s data-depth="0.84">Linh kiện sử dụng trong <span class="p-grad">mô hình</span></h2>
+        <p class="p-lead" data-s data-depth="0.68">
+          Toàn bộ linh kiện đều là module phổ biến trong giáo dục STEM, dễ tìm mua,
+          giá thành phản chăng và phù hợp với học sinh trung học.
+        </p>
+
+        <table class="p-table" data-s data-depth="0.38">
+          <thead>
+            <tr><th>Linh kiện</th><th>Chức năng</th><th>Số lượng</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Vi xử lý ESP32</td><td>Trung tâm xử lý, kết nối WiFi và MQTT</td><td>1</td></tr>
+            <tr><td>Cảm biến nhiệt độ & độ ẩm DHT22</td><td>Đo nhiệt độ và độ ẩm không khí</td><td>1</td></tr>
+            <tr><td>Cảm biến chuyển động PIR</td><td>Phát hiện người chuyển động trong vùng giám sát</td><td>1</td></tr>
+            <tr><td>Cảm biến ánh sáng LDR</td><td>Đo cường độ ánh sáng để điều khiển đèn</td><td>1</td></tr>
+            <tr><td>Cảm biến âm thanh</td><td>Phát hiện tiếng động bất thường</td><td>1</td></tr>
+            <tr><td>Module relay 4 kênh</td><td>Đóng / ngắt mạch thiết bị điện công suất lớn</td><td>1</td></tr>
+            <tr><td>Màn hình LCD 16x2 (I2C)</td><td>Hiển thị trạng thái hệ thống tại chỗ</td><td>1</td></tr>
+            <tr><td>Buzzer & đèn LED</td><td>Báo hiệu trực quan và âm thanh</td><td>2</td></tr>
+            <tr><td>Nguồn 5V & pin dự phòng</td><td>Cấp điện cho hệ thống, dự phòng khi mất điện</td><td>1</td></tr>
+            <tr><td>Tấm solar + bộ chuyển đổi</td><td>Bổ sung năng lượng, giảm tiêu thụ pin</td><td>1</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 4 — KIẾN TRÚC ============ -->
+    <section class="p-slide" data-title="Kiến trúc hệ thống" aria-hidden="true">
+      <div class="p-slide__inner">
+        <span class="p-eyebrow" data-s data-depth="0.92">03 — Kiến trúc</span>
+        <h2 class="p-title" data-s data-depth="0.84">Hệ thống hoạt động <span class="p-grad">như thế nào</span></h2>
+        <p class="p-lead" data-s data-depth="0.68">
+          Dữ liệu từ các cảm biến được gửi về vi điều khiển, xử lý theo logic
+          và điều khiển thiết bị điện thông qua relay, đồng thời đồng bộ với điện thoại.
+        </p>
+
+        <div class="p-flow" data-s data-depth="0.55">
+          <div class="p-flow__col">
+            <div class="p-flow__node"><strong>DHT22</strong><span>Nhiệt độ · Độ ẩm</span></div>
+            <div class="p-flow__node"><strong>PIR</strong><span>Chuyển động</span></div>
+            <div class="p-flow__node"><strong>LDR</strong><span>Ánh sáng</span></div>
+          </div>
+
+          <div class="p-flow__arrow" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </div>
+
+          <div class="p-flow__col">
+            <div class="p-flow__node p-flow__hub"><strong>ESP32</strong><span>Trung tâm điều khiển</span></div>
+          </div>
+
+          <div class="p-flow__arrow" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </div>
+
+          <div class="p-flow__col">
+            <div class="p-flow__node"><strong>Relay</strong><span>Công suất lớn</span></div>
+            <div class="p-flow__node"><strong>Đèn · Quạt</strong><span>Thiết bị điện</span></div>
+            <div class="p-flow__node"><strong>Còi báo</strong><span>Cảnh báo</span></div>
+          </div>
+        </div>
+
+        <ul class="p-list" data-s data-depth="0.42">
+          <li>
+            <span class="p-list__check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l6 6L20 6"/></svg></span>
+            <div>
+              <strong>Đồng bộ từ xa qua MQTT</strong>
+              <span>ESP32 đẩy dữ liệu lên broker, điện thoại nhận thông báo và gửi lệnh điều khiển ngược lại.</span>
+            </div>
+          </li>
+          <li>
+            <span class="p-list__check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l6 6L20 6"/></svg></span>
+            <div>
+              <strong>Chế độ hoạt động độc lập</strong>
+              <span>Khi mất kết nối WiFi, các quy tắc tự động vẫn chạy bình thường — hệ thống không phụ thuộc đám mây.</span>
+            </div>
+          </li>
+          <li>
+            <span class="p-list__check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l6 6L20 6"/></svg></span>
+            <div>
+              <strong>Tách mạch công suất</strong>
+              <span>Relay giữ vai trò công suất, mạch vi điều khiển chỉ làm việc ở mức 5V an toàn.</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 5 — 6 BƯỚC ============ -->
+    <section class="p-slide" data-title="Quy trình 6 bước" aria-hidden="true">
+      <div class="p-slide__inner">
+        <span class="p-eyebrow" data-s data-depth="0.92">04 — Quy trình</span>
+        <h2 class="p-title" data-s data-depth="0.84">Sáu bước thực hiện <span class="p-grad">dự án</span></h2>
+        <p class="p-lead" data-s data-depth="0.68">
+          Từ khảo sát nhu cầu đến khi sản phẩm hoàn thiện được trình diễn —
+          mỗi bước đều có sản phẩm bàn giao và tiêu chí đánh giá rõ ràng.
+        </p>
+
+        <div class="p-timeline" data-depth="0.45">
+          <article class="p-tl" data-s data-depth="0.5">
+            <div class="p-tl__num">1</div>
+            <h4>Khảo sát nhu cầu</h4>
+            <p>Phân tích tình huống thực tế, khảo sát nhu cầu người dùng và xác định các tính năng cần có.</p>
+          </article>
+
+          <article class="p-tl" data-s data-depth="0.5">
+            <div class="p-tl__num">2</div>
+            <h4>Thiết kế mô hình</h4>
+            <p>Vẽ sơ đồ nguyên lý, chọn linh kiện, lập bảng linh kiện và bố trí không gian ngôi nhà.</p>
+          </article>
+
+          <article class="p-tl" data-s data-depth="0.5">
+            <div class="p-tl__num">3</div>
+            <h4>Lắp ráp & đấu nối</h4>
+            <p>Ráp phần cứng, đấu nối cảm biến với vi điều khiển, kiểm tra dây dẫn và nguồn cấp trước khi lập trình.</p>
+          </article>
+
+          <article class="p-tl" data-s data-depth="0.5">
+            <div class="p-tl__num">4</div>
+            <h4>Lập trình điều khiển</h4>
+            <p>Viết code đọc cảm biến, xử lý logic điều kiện và điều khiển relay kích hoạt thiết bị điện.</p>
+          </article>
+
+          <article class="p-tl" data-s data-depth="0.5">
+            <div class="p-tl__num">5</div>
+            <h4>Tích hợp IoT</h4>
+            <p>Cấu hình MQTT broker, đăng ký thiết bị và xây dựng giao diện theo dõi trên điện thoại.</p>
+          </article>
+
+          <article class="p-tl" data-s data-depth="0.5">
+            <div class="p-tl__num">6</div>
+            <h4>Kiểm thử & trình diễn</h4>
+            <p>Chạy thử toàn bộ chu trình, xử lý lỗi, hoàn thiện vỏ mô hình và chuẩn bị bài thuyết trình.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 6 — TÍNH NĂNG ============ -->
+    <section class="p-slide" data-title="Tính năng" aria-hidden="true">
+      <div class="p-slide__inner">
+        <span class="p-eyebrow" data-s data-depth="0.92">05 — Tính năng</span>
+        <h2 class="p-title" data-s data-depth="0.84">Những gì ngôi nhà mô hình <span class="p-grad">tự làm được</span></h2>
+        <p class="p-lead" data-s data-depth="0.68">
+          Mỗi tính năng đều xuất phát từ một tình huống cụ thể, kết hợp cảm biến và
+          chương trình xử lý để tạo ra giá trị thực tế cho người sử dụng.
+        </p>
+
+        <div class="p-grid p-grid--3">
+          <article class="p-card" data-s data-depth="0.55">
+            <div class="p-card__icon p-card__icon--amber">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
+            </div>
+            <h4>Đèn tự động theo ánh sáng</h4>
+            <p>Cảm biến LDR đo cường độ ánh sáng. Khi trời tối, đèn bật tự động; khi đủ sáng, đèn tắt để tiết kiệm điện.</p>
+          </article>
+
+          <article class="p-card" data-s data-depth="0.55">
+            <div class="p-card__icon p-card__icon--green">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a6 6 0 0 0-6 6c0 3-2 4-2 7a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4c0-3-2-4-2-7a6 6 0 0 0-6-6z"/></svg>
+            </div>
+            <h4>Cảnh báo chuyển động</h4>
+            <p>Cảm biến PIR phát hiện người di chuyển, lập tức bật đèn và gửi cảnh báo tới điện thoại trong tích tắc.</p>
+          </article>
+
+          <article class="p-card" data-s data-depth="0.55">
+            <div class="p-card__icon p-card__icon--cyan">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0z"/></svg>
+            </div>
+            <h4>Giám sát nhiệt độ & độ ẩm</h4>
+            <p>DHT22 đo liên tục, hiển thị trên màn hình LCD và cảnh báo khi giá trị vượt ngưỡng an toàn đã đặt.</p>
+          </article>
+
+          <article class="p-card" data-s data-depth="0.55">
+            <div class="p-card__icon p-card__icon--violet">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11V6a2 2 0 1 1 4 0v5"/><path d="M13 11V5a2 2 0 1 1 4 0v9a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6v-3a2 2 0 0 1 4 0"/></svg>
+            </div>
+            <h4>Điều khiển từ xa</h4>
+            <p>Nhờ MQTT và WiFi, bật/tắt thiết bị và xem trạng thái ngôi nhà từ bất kỳ đâu chỉ với chiếc điện thoại.</p>
+          </article>
+
+          <article class="p-card" data-s data-depth="0.55">
+            <div class="p-card__icon p-card__icon--pink">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12a7 7 0 0 1 14 0v6a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z"/><path d="M3 12h2M19 12h2M12 3v2"/></svg>
+            </div>
+            <h4>Cảnh báo âm thanh</h4>
+            <p>Cảm biến micro nhận dạng tiếng động bất thường như kính vỡ, trong khoảng 2 giây sẽ phát còi và gửi thông báo.</p>
+          </article>
+
+          <article class="p-card" data-s data-depth="0.55">
+            <div class="p-card__icon p-card__icon--amber">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="12" rx="2.5"/><path d="M2 10h20M6 15h5"/></svg>
+            </div>
+            <h4>Hiển thị trạng thái</h4>
+            <p>Màn hình LCD hiển thị trực quan nhiệt độ, độ ẩm, trạng thái cửa và đèn, giúp theo dõi ngay tại chỗ.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 7 — YÊU CẦU ============ -->
+    <section class="p-slide" data-title="Yêu cầu sản phẩm" aria-hidden="true">
+      <div class="p-slide__inner">
+        <span class="p-eyebrow" data-s data-depth="0.92">06 — Yêu cầu</span>
+        <h2 class="p-title" data-s data-depth="0.84">Tiêu chí của một sản phẩm <span class="p-grad">đạt yêu cầu</span></h2>
+        <p class="p-lead" data-s data-depth="0.68">
+          Sản phẩm phải vừa đáp ứng yêu cầu kỹ thuật, vừa dễ sử dụng và mang ý nghĩa thực tiễn.
+        </p>
+
+        <div class="p-grid p-grid--2">
+          <ul class="p-list" data-s data-depth="0.42">
+            <li>
+              <span class="p-list__check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l6 6L20 6"/></svg></span>
+              <div><strong>Hoạt động ổn định</strong><span>Phản hồi đúng với thay đổi môi trường, không tự reset hoặc treo máy.</span></div>
+            </li>
+            <li>
+              <span class="p-list__check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l6 6L20 6"/></svg></span>
+              <div><strong>Dễ sử dụng</strong><span>Giao diện điện thoại đơn giản, người mới cũng dùng được không cần kiến thức chuyên môn.</span></div>
+            </li>
+            <li>
+              <span class="p-list__check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l6 6L20 6"/></svg></span>
+              <div><strong>Tiết kiệm năng lượng</strong><span>Trạng thái chờ tiêu thụ điện thấp, có pin dự phòng và tấm solar bổ sung.</span></div>
+            </li>
+            <li>
+              <span class="p-list__check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l6 6L20 6"/></svg></span>
+              <div><strong>An toàn điện</strong><span>Nguồn 5V, mạch bọc cách điện, có cầu chì chống quá tải.</span></div>
+            </li>
+          </ul>
+
+          <table class="p-table" data-s data-depth="0.38">
+            <thead>
+              <tr><th>Tiêu chí</th><th>Chỉ số</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Độ ổn định</td><td>Chạy liên tục không lỗi</td></tr>
+              <tr><td>Tốc độ phản hồi</td><td>Không quá 2 giây</td></tr>
+              <tr><td>Kết nối</td><td>WiFi 2.4GHz · MQTT</td></tr>
+              <tr><td>Nguồn điện</td><td>5V DC · Pin dự phòng</td></tr>
+              <tr><td>Chi phí ước tính</td><td>Dưới 500.000 đồng</td></tr>
+              <tr><td>Đối tượng sử dụng</td><td>Học sinh THPT</td></tr>
+              <tr><td>Thời gian hoàn thành</td><td>4 – 6 tuần</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 8 — HIỆU QUẢ ============ -->
+    <section class="p-slide" data-title="Hiệu quả & giá trị" aria-hidden="true">
+      <div class="p-slide__inner">
+        <span class="p-eyebrow" data-s data-depth="0.92">07 — Hiệu quả</span>
+        <h2 class="p-title" data-s data-depth="0.84">Giá trị mang lại cho <span class="p-grad">cộng đồng</span></h2>
+        <p class="p-lead" data-s data-depth="0.68">
+          Những con số dưới đây là kết quả kỳ vọng của mô hình khi áp dụng
+          các quy tắc tự động hóa đã xây dựng.
+        </p>
+
+        <div class="p-stats" data-s data-depth="0.32">
+          <div class="p-stat">
+            <div class="p-stat__num">30%</div>
+            <div class="p-stat__label">Giảm tiêu thụ điện</div>
+          </div>
+          <div class="p-stat">
+            <div class="p-stat__num">2s</div>
+            <div class="p-stat__label">Thời gian phản hồi</div>
+          </div>
+          <div class="p-stat">
+            <div class="p-stat__num">24/7</div>
+            <div class="p-stat__label">Giám sát liên tục</div>
+          </div>
+          <div class="p-stat">
+            <div class="p-stat__num">8+</div>
+            <div class="p-stat__label">Loại cảm biến tích hợp</div>
+          </div>
+        </div>
+
+        <div class="p-bars" data-s data-depth="0.28">
+          <div class="p-bar__row">
+            <span class="p-bar__label">Tiết kiệm điện chiếu sáng</span>
+            <span class="p-bar__track"><span class="p-bar__fill" style="--w:88%"></span></span>
+            <span class="p-bar__val">88%</span>
+          </div>
+          <div class="p-bar__row">
+            <span class="p-bar__label">Độ chính xác cảm biến</span>
+            <span class="p-bar__track"><span class="p-bar__fill" style="--w:92%"></span></span>
+            <span class="p-bar__val">92%</span>
+          </div>
+          <div class="p-bar__row">
+            <span class="p-bar__label">Khả năng mở rộng thêm tính năng</span>
+            <span class="p-bar__track"><span class="p-bar__fill" style="--w:75%"></span></span>
+            <span class="p-bar__val">75%</span>
+          </div>
+          <div class="p-bar__row">
+            <span class="p-bar__label">Mức độ dễ dùng cho học sinh</span>
+            <span class="p-bar__track"><span class="p-bar__fill" style="--w:85%"></span></span>
+            <span class="p-bar__val">85%</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 9 — HƯỚNG PHÁT TRIỂN ============ -->
+    <section class="p-slide" data-title="Hướng phát triển" aria-hidden="true">
+      <div class="p-slide__inner">
+        <span class="p-eyebrow" data-s data-depth="0.92">08 — Hướng phát triển</span>
+        <h2 class="p-title" data-s data-depth="0.84">Những bước tiếp theo của <span class="p-grad">mô hình</span></h2>
+        <p class="p-lead" data-s data-depth="0.68">
+          Mô hình hiện tại là nền tảng. Dưới đây là các hướng mở rộng mà nhóm
+          dự kiến tiếp tục phát triển trong các phiên bản tiếp theo.
+        </p>
+
+        <div class="p-grid p-grid--2">
+          <article class="p-card" data-s data-depth="0.55">
+            <div class="p-card__icon p-card__icon--violet">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.4 5.6L20 10l-4 4.2.9 5.8L12 17.3 7.1 20l.9-5.8L4 10l5.6-1.4z"/></svg>
+            </div>
+            <h4>Trợ lý ảo bằng giọng nói</h4>
+            <p>Tích hợp micro để điều khiển ngôi nhà bằng câu lệnh tiếng Việt, phù hợp với người lớn tuổi.</p>
+          </article>
+
+          <article class="p-card" data-s data-depth="0.55">
+            <div class="p-card__icon p-card__icon--green">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2"/></svg>
+            </div>
+            <h4>Năng lượng mặt trời</h4>
+            <p>Mở rộng tấm solar và bộ lưu trữ để hệ thống gần như hoạt động độc lập với lưới điện.</p>
+          </article>
+
+          <article class="p-card" data-s data-depth="0.55">
+            <div class="p-card__icon p-card__icon--cyan">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>
+            </div>
+            <h4>Giám sát tiêu thụ điện</h4>
+            <p>Gắn cảm biến dòng điện để theo dõi, thống kê mức tiêu thụ của từng thiết bị theo thời gian.</p>
+          </article>
+
+          <article class="p-card" data-s data-depth="0.55">
+            <div class="p-card__icon p-card__icon--pink">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="12" rx="2.5"/><path d="M2 10h20M6 15h5"/></svg>
+            </div>
+            <h4>Mở rộng thành mạng lưới nhà thông minh</h4>
+            <p>Kết nối nhiều mô hình lại với nhau để điều khiển toàn khu vực và chia sẻ dữ liệu.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 10 — KẾT LUẬN ============ -->
+    <section class="p-slide" data-title="Kết luận & Thông điệp" aria-hidden="true">
+      <div class="p-slide__inner">
+        <div class="p-quote">
+          <h2 class="p-quote__text" data-depth="0.86">
+            <span data-s>Nhà thông minh không chỉ là công nghệ —</span>
+            <span class="p-grad" data-s>đó là cách chúng ta chăm sóc</span>
+            <span data-s>ngôi nhà của mình.</span>
+          </h2>
+          <p class="p-lead" style="margin:0 auto 0.4rem" data-s data-depth="0.6">
+            Mỗi bước trong dự án đều bắt đầu từ một nhu cầu thực tế và kết thúc bằng
+            một sản phẩm có thể sử dụng được. Chúng em muốn mỗi người đều có thể
+            tự tay xây dựng ngôi nhà thông minh đầu tiên của mình.
+          </p>
+          <p class="p-quote__by" data-s data-depth="0.5">Cảm ơn thầy cô và các bạn đã lắng nghe!</p>
+
+          <div class="p-actions" data-s data-depth="0.46">
+            <a class="p-btn p-btn--primary" href="index.html">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+              Về trang giới thiệu
+            </a>
+            <button class="p-btn p-btn--ghost" type="button" onclick="window.print()">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="6" y="14" width="12" height="7"/><path d="M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/></svg>
+              Xuất bản PDF
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- ===== THANH ĐIỀU HƯỚNG ===== -->
+<div class="p-nav">
+  <button class="p-nav__btn p-nav__btn--prev" type="button" aria-label="Slide trước">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+
+  <div class="p-ring">
+    <svg viewBox="0 0 46 46" aria-hidden="true">
+      <circle class="p-ring__bg" cx="23" cy="23" r="20"></circle>
+      <circle class="p-ring__fg" cx="23" cy="23" r="20"></circle>
+    </svg>
+    <span class="p-ring__txt">0%</span>
+  </div>
+
+  <div class="p-counter" aria-live="polite">
+    <span class="p-counter__cur">01</span>
+    <span class="p-counter__sep">/</span>
+    <span class="p-counter__total">10</span>
+  </div>
+
+  <button class="p-nav__btn p-nav__btn--next" type="button" aria-label="Slide tiếp theo">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+  </button>
+</div>
+
+<!-- ===== DOTS (mobile) ===== -->
+<div class="p-dots" aria-hidden="true"></div>
+
+<!-- ===== PHÍM TẮT ===== -->
+<div class="p-keys" aria-hidden="true">
+  <span><kbd>←</kbd> <kbd>→</kbd> Chuyển slide</span>
+  <span><kbd>O</kbd> Tổng quan</span>
+  <span><kbd>F</kbd> Toàn màn hình</span>
+</div>
+
+<!-- ===== OVERVIEW MODE ===== -->
+<div class="p-overview" aria-hidden="true">
+  <div class="p-overview__head">
+    <span class="p-overview__title">Tổng quan các slide</span>
+    <button class="p-icon-btn p-overview__close" type="button" aria-label="Đóng">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="p-overview__grid"></div>
+</div>
+
+<!-- ===== SCRIPTS ===== -->
+<script src="assets/js/vendor-guard.js"></script>
+<script src="assets/js/core.js"></script>
+<script src="assets/js/presentation.js"></script>
+
+</body>
+</html>

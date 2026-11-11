@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f6f9fb">
+<meta name="description" content="Dự án STEM — Mô hình Nhà Thông Minh: giới thiệu tổng quan dự án, vật liệu, quy trình 6 bước và các tính năng thông minh.">
+<title>Nhà Thông Minh — Dự án STEM</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+</head>
+
+<body class="no-js">
+<script>document.body.classList.remove('no-js');</script>
+
+<a class="skip-link" href="#main">Bỏ qua tới nội dung chính</a>
+
+<!-- ===== PRELOADER ===== -->
+<div class="preloader" id="preloader">
+  <div class="preloader__curtain"><i></i><i></i></div>
+  <div class="preloader__inner">
+    <svg class="preloader__logo" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+      <path d="M14 47 L50 16 L86 47"/>
+      <path d="M22 44 L22 84 L78 84 L78 44"/>
+      <path d="M40 84 L40 58 L60 58 L60 84"/>
+      <rect x="27" y="52" width="10" height="10"/>
+      <rect x="63" y="52" width="10" height="10"/>
+      <path d="M30 92 L30 86 L70 86 L70 92 Z"/>
+    </svg>
+    <div class="preloader__pct">0%</div>
+    <div class="preloader__label">Đang tải dự án</div>
+    <div class="preloader__bar"><span></span></div>
+  </div>
+</div>
+
+<!-- ===== BACKGROUND LAYERS ===== -->
+<div class="bg-blobs" aria-hidden="true"><span></span><span></span><span></span></div>
+<div class="bg-layer bg-grid" aria-hidden="true"></div>
+<div class="bg-layer bg-noise" aria-hidden="true"></div>
+<canvas class="bg-layer bg-canvas" id="particle-canvas" aria-hidden="true"></canvas>
+<div class="bg-layer" id="pointer-glow" aria-hidden="true"
+     style="position:fixed;width:520px;height:520px;border-radius:50%;
+            background:radial-gradient(circle,rgba(56,189,248,.14),transparent 62%);
+            pointer-events:none;z-index:0;will-change:transform;"></div>
+
+<!-- ===== CURSOR ===== -->
+<div class="cursor-dot" aria-hidden="true"></div>
+<div class="cursor-ring" aria-hidden="true"></div>
+
+<!-- ===== PROGRESS BAR ===== -->
+<div class="progress-bar" aria-hidden="true"></div>
+
+<!-- ===== PAGE TRANSITION ===== -->
+<div class="page-transition" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+
+<!-- ===== NAV ===== -->
+<header class="nav" id="nav">
+  <div class="nav__inner">
+    <a class="nav__brand" href="#hero">
+      <span class="nav__logo">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 11l9-7 9 7"/>
+          <path d="M5 10v10h14V10"/>
+          <path d="M10 20v-6h4v6"/>
+          <circle class="fill" cx="12" cy="4" r="1.4"/>
+        </svg>
+      </span>
+      <span>Nhà Thông Minh</span>
+    </a>
+
+    <nav class="nav__links" id="nav-links" aria-label="Điều hướng chính">
+      <a class="nav__link" href="#muc-tieu">Mục tiêu</a>
+      <a class="nav__link" href="#vat-lieu">Vật liệu</a>
+      <a class="nav__link" href="#kien-truc">Kiến trúc</a>
+      <a class="nav__link" href="#quy-trinh">Quy trình</a>
+      <a class="nav__link" href="#tinh-nang">Tính năng</a>
+      <a class="nav__link" href="#yeu-cau">Yêu cầu</a>
+    </nav>
+
+    <div class="nav__actions">
+      <button class="icon-btn theme-toggle" type="button" aria-label="Đổi giao diện sáng/tối" title="Đổi giao diện">
+        <svg class="sun" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.2"/>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+        </svg>
+        <svg class="moon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+        </svg>
+      </button>
+      <a class="btn btn--primary" href="presentation.html" data-transition data-magnetic="0.22">
+        Thuyết trình
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <button class="nav__burger" id="nav-burger" type="button" aria-label="Mở menu" aria-expanded="false" aria-controls="nav-links">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ================= HERO ================= -->
+  <section class="hero" id="hero">
+    <div class="container">
+      <div class="hero__grid">
+
+        <div class="hero__content">
+          <span class="hero__badge">
+            <b>STEM</b> Dự án mô hình giáo dục
+          </span>
+
+          <h1 class="hero__title">
+            <span class="line"><span class="hero__title__inner">Nhà </span></span>
+            <span class="line"><span class="hero__title__inner grad-text">Thông Minh</span></span>
+            <span class="line"><span class="hero__title__inner">cho mọi nhà</span></span>
+          </h1>
+
+          <p class="hero__subtitle">
+            Mô hình nhà tự động ứng dụng IoT với ESP32, cảm biến và điều khiển từ xa —
+            <span class="scramble" data-text="một sáng kiến nhỏ mang ý nghĩa lớn cho cộng đồng."></span>
+          </p>
+
+          <div class="hero__cta">
+            <a class="btn btn--primary btn--lg cta-scroll" href="#muc-tieu" data-magnetic="0.28">
+              Khám phá dự án
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+            <a class="btn btn--ghost btn--lg" href="presentation.html" data-transition data-magnetic="0.2">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H4z"/><path d="M9 20h6M12 16v4"/></svg>
+              Bài thuyết trình
+            </a>
+          </div>
+
+          <div class="hero__meta">
+            <div class="hero__meta-item"><strong>6</strong><span>Bước thực hiện</span></div>
+            <div class="hero__meta-item"><strong>8+</strong><span>Loại cảm biến</span></div>
+            <div class="hero__meta-item"><strong>5</strong><span>Tính năng chính</span></div>
+            <div class="hero__meta-item"><strong>100%</strong><span>Tự động hóa</span></div>
+          </div>
+        </div>
+
+        <div class="hero__stage" id="hero-stage" data-parallax="0.06">
+          <span class="hero__stage-tag hero__stage-tag--tl"><i></i> ESP32 • MQTT</span>
+          <span class="hero__stage-tag hero__stage-tag--br"><i></i> Cảm biến hoạt động</span>
+          <span class="hero__stage-hint">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11V6a2 2 0 1 1 4 0v5"/><path d="M13 11V5a2 2 0 1 1 4 0v9a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6v-3a2 2 0 0 1 4 0"/></svg>
+            Kéo để xoay
+          </span>
+
+          <!-- ===== CONSOLE GÕ LỆNH ĐIỀU KHIỂN SCENE 3D ===== -->
+          <div class="console3d" id="console3d" aria-live="polite">
+            <button
+              type="button"
+              class="console3d__badge"
+              id="console3d-badge"
+              aria-expanded="false"
+              aria-controls="console3d-panel"
+              title="Mở console điều khiển 3D (phím ` hoặc Ctrl+K)"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>
+              <span>Console</span>
+              <kbd>`</kbd>
+            </button>
+
+            <div class="console3d__panel" id="console3d-panel" role="dialog" aria-label="Console điều khiển scene 3D">
+              <div class="console3d__bar">
+                <span class="console3d__leds"><i></i><i></i><i></i></span>
+                <span class="console3d__title">ESP32-CONSOLE</span>
+                <button type="button" class="console3d__btn" data-console-act="clear" title="Xoá màn hình">clear</button>
+                <button type="button" class="console3d__btn console3d__btn--x" data-console-act="close" title="Đóng console">✕</button>
+              </div>
+              <div class="console3d__out" id="console3d-out"></div>
+              <form class="console3d__line" id="console3d-form" autocomplete="off">
+                <span class="console3d__prompt">&gt;</span>
+                <input
+                  type="text"
+                  id="console3d-input"
+                  class="console3d__input"
+                  placeholder="gõ 'help' rồi Enter…"
+                  spellcheck="false"
+                  autocapitalize="off"
+                  aria-label="Nhập lệnh"
+                />
+                <span class="console3d__cursor" aria-hidden="true"></span>
+              </form>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="scroll-hint" style="position:absolute;bottom:1.6rem;left:50%;transform:translateX(-50%)">
+      <span class="scroll-hint__track"></span>
+      Cuộn xuống
+    </div>
+  </section>
+
+  <!-- ================= MỤC TIÊU ================= -->
+  <section class="section goals" id="muc-tieu">
+    <div class="container">
+      <div class="section__head section__head--center">
+        <span class="eyebrow" data-reveal>Mục tiêu</span>
+        <h2 class="section__title" data-reveal data-reveal-delay="0.08">
+          Ba mục tiêu của <span class="grad-text">dự án STEM</span>
+        </h2>
+        <p class="section__desc" data-reveal data-reveal-delay="0.16">
+          Mô hình được thiết kế để học tập, trình diễn và lan tỏa kiến thức công nghệ
+          đến cộng đồng một cách dễ hiểu, dễ làm và dễ nhân rộng.
+        </p>
+      </div>
+
+      <div class="goals__grid" data-stagger>
+        <article class="goal-card" data-tilt="7">
+          <span class="goal-card__num">01</span>
+          <div class="goal-card__icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/></svg>
+          </div>
+          <h3>Ứng dụng IoT thực tế</h3>
+          <p>Mô hình hoạt động với cùng nguyên lý của một ngôi nhà thông minh thật: cảm biến thu thập dữ liệu, vi điều khiển xử lý và điều khiển thiết bị tự động.</p>
+        </article>
+
+        <article class="goal-card" data-tilt="7">
+          <span class="goal-card__num">02</span>
+          <div class="goal-card__icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.4 5.6L20 10l-4 4.2.9 5.8L12 17.3 7.1 20l.9-5.8L4 10l5.6-1.4z"/></svg>
+          </div>
+          <h3>Kích thích tư duy sáng tạo</h3>
+          <p>Rèn luyện tư duy thiết kế, giải quyết vấn đề và làm việc nhóm thông qua từng giai đoạn từ ý tưởng đến sản phẩm hoàn chỉnh.</p>
+        </article>
+
+        <article class="goal-card" data-tilt="7">
+          <span class="goal-card__num">03</span>
+          <div class="goal-card__icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/></svg>
+          </div>
+          <h3>Phục vụ cộng đồng</h3>
+          <p>Hướng đến nhu cầu thực tiễn: tiết kiệm điện năng, an toàn gia đình và hỗ trợ người lớn tuổi theo dõi sức khỏe từ xa.</p>
+        </article>
+      </div>
+
+            <div class="illus-gallery" data-stagger>
+        <figure class="illus-shot illus-shot--wide">
+          <span class="illus" data-tilt="5">
+            <img
+              class="illus__img"
+              src="assets/img/model-09.jpg"
+              alt="Mô hình nhà thông minh hoàn chỉnh — ảnh chụp thực tế sản phẩm của nhóm"
+              loading="lazy"
+              decoding="async"
+              width="1024"
+              height="935"
+              onerror="this.closest('.illus').classList.add('is-fallback')"
+            />
+            <span class="illus__fallback" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+              Mô hình nhà
+            </span>
+            <span class="illus__caption">Mô hình nhà thông minh — sản phẩm hoàn chỉnh</span>
+          </span>
+        </figure>
+        <figure class="illus-shot">
+          <span class="illus" data-tilt="5">
+            <img
+              class="illus__img"
+              src="assets/img/model-01.jpg"
+              alt="Toàn cảnh mô hình nhà thông minh do nhóm tự lắp ráp"
+              loading="lazy"
+              decoding="async"
+              width="1024"
+              height="768"
+              onerror="this.closest('.illus').classList.add('is-fallback')"
+            />
+            <span class="illus__fallback" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+              Mô hình nhà
+            </span>
+            <span class="illus__caption">Toàn cảnh mô hình</span>
+          </span>
+        </figure>
+        <figure class="illus-shot">
+          <span class="illus" data-tilt="5">
+            <img
+              class="illus__img"
+              src="assets/img/model-02.jpg"
+              alt="Mặt trước mô hình nhà với cửa sổ, cửa chính và thiết bị cảm biến"
+              loading="lazy"
+              decoding="async"
+              width="1024"
+              height="768"
+              onerror="this.closest('.illus').classList.add('is-fallback')"
+            />
+            <span class="illus__fallback" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+              Mô hình nhà
+            </span>
+            <span class="illus__caption">Mặt trước — cửa chính &amp; cảm biến</span>
+          </span>
+        </figure>
+        <figure class="illus-shot">
+          <span class="illus" data-tilt="5">
+            <img
+              class="illus__img"
+              src="assets/img/model-03.jpg"
+              alt="Góc bên của mô hình nhà thông minh thể hiện bố trí không gian"
+              loading="lazy"
+              decoding="async"
+              width="1024"
+              height="768"
+              onerror="this.closest('.illus').classList.add('is-fallback')"
+            />
+            <span class="illus__fallback" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg>
+              Góc bên
+            </span>
+            <span class="illus__caption">Góc bên — bố trí không gian</span>
+          </span>
+        </figure>
+        <figure class="illus-shot">
+          <span class="illus" data-tilt="5">
+            <img
+              class="illus__img"
+              src="assets/img/model-04.jpg"
+              alt="Phần mái nhà và tấm pin năng lượng mặt trời của mô hình"
+              loading="lazy"
+              decoding="async"
+              width="1024"
+              height="768"
+              onerror="this.closest('.illus').classList.add('is-fallback')"
+            />
+            <span class="illus__fallback" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 2v6M12 22v-4M4.9 4.9l4.2 4.2M19.1 19.1l-4.2-4.2M2 12h6M22 12h-4"/><circle cx="12" cy="12" r="3.4"/></svg>
+              Mái &amp; solar
+            </span>
+            <span class="illus__caption">Mái nhà &amp; tấm solar</span>
+          </span>
+        </figure>
+        <figure class="illus-shot">
+          <span class="illus" data-tilt="5">
+            <img
+              class="illus__img"
+              src="assets/img/model-05.jpg"
+              alt="Bên trong mô hình: bo mạch ESP32, cảm biến và dây đấu nối"
+              loading="lazy"
+              decoding="async"
+              width="1024"
+              height="768"
+              onerror="this.closest('.illus').classList.add('is-fallback')"
+            />
+            <span class="illus__fallback" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M10 2v4M14 2v4M10 18v4M14 18v4M2 10h4M2 14h4M18 10h4M18 14h4"/></svg>
+              Mạch điện
+            </span>
+            <span class="illus__caption">Bên trong — mạch ESP32 &amp; dây đấu</span>
+          </span>
+        </figure>
+        <figure class="illus-shot">
+          <span class="illus" data-tilt="5">
+            <img
+              class="illus__img"
+              src="assets/img/model-06.jpg"
+              alt="Module cảm biến và linh kiện điện tử được lắp trong mô hình"
+              loading="lazy"
+              decoding="async"
+              width="1024"
+              height="768"
+              onerror="this.closest('.illus').classList.add('is-fallback')"
+            />
+            <span class="illus__fallback" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="12" rx="2.5"/><path d="M6 11h.01M10 11h.01M14 11h.01M18 11h.01M7 15h10"/></svg>
+              Linh kiện
+            </span>
+            <span class="illus__caption">Module cảm biến &amp; linh kiện</span>
+          </span>
+        </figure>
+        <figure class="illus-shot">
+          <span class="illus" data-tilt="5">
+            <img
+              class="illus__img"
+              src="assets/img/model-07.jpg"
+              alt="Mạch thử với linh kiện điện tử trong quá trình lắp ráp mô hình"
+              loading="lazy"
+              decoding="async"
+              width="1024"
+              height="768"
+              onerror="this.closest('.illus').classList.add('is-fallback')"
+            />
+            <span class="illus__fallback" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="12" rx="2.5"/><path d="M6 11h.01M10 11h.01M14 11h.01M18 11h.01M7 15h10"/></svg>
+              Mạch thử
+            </span>
+            <span class="illus__caption">Mạch thử trong quá trình lắp ráp</span>
+          </span>
+        </figure>
+        <figure class="illus-shot">
+          <span class="illus" data-tilt="5">
+            <img
+              class="illus__img"
+              src="assets/img/model-08.jpg"
+              alt="Thiết bị đầu cuối: màn hình hiển thị trạng thái cảm biến của hệ thống"
+              loading="lazy"
+              decoding="async"
+              width="1024"
+              height="768"
+              onerror="this.closest('.illus').classList.add('is-fallback')"
+            />
+            <span class="illus__fallback" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h5"/></svg>
+              Hiển thị
+            </span>
+            <span class="illus__caption">Màn hình hiển thị trạng thái</span>
+          </span>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= VẬT LIỆU ================= -->
+  <section class="section materials" id="vat-lieu">
+    <div class="container">
+      <div class="section__head">
+        <span class="eyebrow" data-reveal>Vật liệu</span>
+        <h2 class="section__title" data-reveal data-reveal-delay="0.08">
+          Linh kiện sử dụng trong mô hình
+        </h2>
+        <p class="section__desc" data-reveal data-reveal-delay="0.16">
+          Toàn bộ linh kiện đều dễ tìm mua, giá thành phải chăng và phù hợp với học sinh
+          trung học — đảm bảo mọi nhóm đều có thể tự lắp đặt.
+        </p>
+      </div>
+
+      <div class="materials__grid">
+        <article class="mat-chip" data-hue="green">
+          <span class="mat-chip__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M10 2v4M14 2v4M10 18v4M14 18v4M2 10h4M2 14h4M18 10h4M18 14h4"/></svg></span>
+          <div class="mat-chip__body"><h4>Vi xử lý ESP32</h4><span>Bo mạch chính • WiFi + BLE</span></div>
+        </article>
+
+        <article class="mat-chip" data-hue="blue">
+          <span class="mat-chip__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0z"/></svg></span>
+          <div class="mat-chip__body"><h4>Cảm biến DHT22</h4><span>Nhiệt độ & độ ẩm</span></div>
+        </article>
+
+        <article class="mat-chip" data-hue="pink">
+          <span class="mat-chip__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a6 6 0 0 0-6 6c0 3-2 4-2 7a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4c0-3-2-4-2-7a6 6 0 0 0-6-6z"/><path d="M9 22h6"/></svg></span>
+          <div class="mat-chip__body"><h4>Cảm biến chuyển động PIR</h4><span>Phát hiện người lạ</span></div>
+        </article>
+
+        <article class="mat-chip" data-hue="amber">
+          <span class="mat-chip__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></span>
+          <div class="mat-chip__body"><h4>Cảm biến ánh sáng LDR</h4><span>Tự động bật đèn</span></div>
+        </article>
+
+        <article class="mat-chip" data-hue="violet">
+          <span class="mat-chip__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 8V4M9 4h6M9 14h.01M15 14h.01M9 17h.01M15 17h.01"/></svg></span>
+          <div class="mat-chip__body"><h4>Module relay 4 kênh</h4><span>Đóng/ngắt thiết bị</span></div>
+        </article>
+
+        <article class="mat-chip" data-hue="cyan">
+          <span class="mat-chip__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12a7 7 0 0 1 14 0v6a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z"/><path d="M3 12h2M19 12h2M12 3v2"/></svg></span>
+          <div class="mat-chip__body"><h4>Cảm biến âm thanh</h4><span>Phát hiện tiếng động</span></div>
+        </article>
+
+        <article class="mat-chip" data-hue="green">
+          <span class="mat-chip__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19.5 5.5a9 9 0 0 1 0 13"/></svg></span>
+          <div class="mat-chip__body"><h4>Buzzer & đèn LED</h4><span>Cảnh báo, báo hiệu</span></div>
+        </article>
+
+        <article class="mat-chip" data-hue="blue">
+          <span class="mat-chip__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="12" rx="2.5"/><path d="M6 11h.01M10 11h.01M14 11h.01M18 11h.01M7 15h10"/></svg></span>
+          <div class="mat-chip__body"><h4>LCD 16x2 I2C</h4><span>Hiển thị trạng thái</span></div>
+        </article>
+
+        <article class="mat-chip" data-hue="amber">
+          <span class="mat-chip__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h5"/></svg></span>
+          <div class="mat-chip__body"><h4>Nguồn & pin dự phòng</h4><span>Adapter 5V + Li-ion</span></div>
+        </article>
+
+        <article class="mat-chip" data-hue="violet">
+          <span class="mat-chip__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v6M12 22v-4M4.9 4.9l4.2 4.2M19.1 19.1l-4.2-4.2M2 12h6M22 12h-4"/><circle cx="12" cy="12" r="3.4"/></svg></span>
+          <div class="mat-chip__body"><h4>Tấm solar nhỏ</h4><span>Bổ sung năng lượng</span></div>
+        </article>
+      </div>
+
+            <div class="illus-gallery" data-stagger>
+        <figure class="illus-shot">
+          <span class="illus" data-tilt="5">
+            <img
+              class="illus__img"
+              src="assets/img/model-05.jpg"
+              alt="Bo mạch ESP32 và cảm biến đã lắp trong mô hình nhà thông minh"
+              loading="lazy"
+              decoding="async"
+              width="1024"
+              height="768"
+              onerror="this.closest('.illus').classList.add('is-fallback')"
+            />
+            <span class="illus__fallback" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M10 2v4M14 2v4M10 18v4M14 18v4M2 10h4M2 14h4M18 10h4M18 14h4"/></svg>
+              ESP32
+            </span>
+            <span class="illus__caption">Vi xử lý ESP32 — trung tâm điều khiển</span>
+          </span>
+        </figure>
+        <figure class="illus-shot">
+          <span class="illus" data-tilt="5">
+            <img
+              class="illus__img"
+              src="assets/img/model-07.jpg"
+              alt="Mạch thử với các module cảm biến dùng để lắp ráp mô hình"
+              loading="lazy"
+              decoding="async"
+              width="1024"
+              height="768"
+              onerror="this.closest('.illus').classList.add('is-fallback')"
+            />
+            <span class="illus__fallback" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0z"/></svg>
+              Cảm biến
+            </span>
+            <span class="illus__caption">Cảm biến &amp; mạch thử</span>
+          </span>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= KIẾN TRÚC ================= -->
+  <section class="section arch" id="kien-truc">
+    <div class="container">
+      <div class="section__head section__head--center">
+        <span class="eyebrow" data-reveal>Kiến trúc</span>
+        <h2 class="section__title" data-reveal data-reveal-delay="0.08">
+          Hệ thống hoạt động như thế nào
+        </h2>
+        <p class="section__desc" data-reveal data-reveal-delay="0.16">
+          Dữ liệu từ cảm biến được xử lý tại trung tâm, sau đó điều khiển thiết bị
+          và đồng bộ với điện thoại qua mạng WiFi.
+        </p>
+      </div>
+
+      <div class="arch__diagram" data-stagger>
+        <div class="arch__col">
+          <div class="arch__node">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0z"/></svg>
+            <h4>DHT22</h4><p>Nhiệt độ · Độ ẩm</p>
+          </div>
+          <div class="arch__node">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a6 6 0 0 0-6 6c0 3-2 4-2 7a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4c0-3-2-4-2-7a6 6 0 0 0-6-6z"/></svg>
+            <h4>PIR</h4><p>Chuyển động</p>
+          </div>
+          <div class="arch__node">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4"/></svg>
+            <h4>LDR</h4><p>Ánh sáng</p>
+          </div>
+        </div>
+
+        <div class="arch__arrow" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+
+        <div class="arch__col">
+          <div class="arch__node arch__node--hub">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M10 2v4M14 2v4M10 18v4M14 18v4M2 10h4M2 14h4M18 10h4M18 14h4"/></svg>
+            <h4>ESP32</h4><p>Trung tâm điều khiển</p>
+          </div>
+        </div>
+
+        <div class="arch__arrow" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+
+        <div class="arch__col">
+          <div class="arch__node">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 8V4"/></svg>
+            <h4>Relay</h4><p>Công suất lớn</p>
+          </div>
+          <div class="arch__node">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
+            <h4>Đèn & Quạt</h4><p>Thiết bị điện</p>
+          </div>
+          <div class="arch__node">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10z"/></svg>
+            <h4>Còi báo</h4><p>Cảnh báo</p>
+          </div>
+        </div>
+
+        <div class="arch__wire">
+          <div class="arch__wire-line"></div>
+          <span class="arch__wire-label">MQTT · WiFi · Điện thoại</span>
+          <div class="arch__wire-line"></div>
+        </div>
+      </div>
+
+            <div class="illus-gallery" data-stagger>
+        <figure class="illus-shot">
+          <span class="illus" data-tilt="5">
+            <img
+              class="illus__img"
+              src="assets/img/model-06.jpg"
+              alt="Linh kiện điện tử và module relay được lắp đặt trong mô hình"
+              loading="lazy"
+              decoding="async"
+              width="1024"
+              height="768"
+              onerror="this.closest('.illus').classList.add('is-fallback')"
+            />
+            <span class="illus__fallback" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="12" rx="2.5"/><path d="M6 11h.01M10 11h.01M14 11h.01M18 11h.01M7 15h10"/></svg>
+              Mạch đấu nối
+            </span>
+            <span class="illus__caption">Mạch đấu nối &amp; module relay</span>
+          </span>
+        </figure>
+        <figure class="illus-shot">
+          <span class="illus" data-tilt="5">
+            <img
+              class="illus__img"
+              src="assets/img/model-08.jpg"
+              alt="Màn hình LCD hiển thị trạng thái cảm biến từ xa qua MQTT"
+              loading="lazy"
+              decoding="async"
+              width="1024"
+              height="768"
+              onerror="this.closest('.illus').classList.add('is-fallback')"
+            />
+            <span class="illus__fallback" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h5"/></svg>
+              Giao diện
+            </span>
+            <span class="illus__caption">Giao diện theo dõi trạng thái</span>
+          </span>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 6 BƯỚC THỰC HIỆN ================= -->
+  <section class="section steps" id="quy-trinh">
+    <div class="container">
+      <div class="section__head section__head--center">
+        <span class="eyebrow" data-reveal>Quy trình</span>
+        <h2 class="section__title" data-reveal data-reveal-delay="0.08">
+          Sáu bước thực hiện dự án
+        </h2>
+        <p class="section__desc" data-reveal data-reveal-delay="0.16">
+          Từ khảo sát nhu cầu đến khi sản phẩm hoàn thiện được trình diễn —
+          mỗi bước đều có sản phẩm bàn giao rõ ràng.
+        </p>
+      </div>
+
+      <div class="steps__track">
+        <div class="steps__progress" id="steps-progress"></div>
+
+        <article class="step" data-step="1">
+          <div class="step__dot">1</div>
+          <div class="step__card">
+            <h4>Khảo sát nhu cầu</h4>
+            <p>Phân tích các tình huống thực tế, khảo sát nhu cầu của người dùng và xác định các tính năng cần có.</p>
+          </div>
+        </article>
+
+        <article class="step" data-step="2">
+          <div class="step__dot">2</div>
+          <div class="step__card">
+            <h4>Thiết kế mô hình</h4>
+            <p>Vẽ sơ đồ nguyên lý, chọn linh kiện, lập bảng linh kiện và bố trí không gian cho ngôi nhà mô hình.</p>
+          </div>
+        </article>
+
+        <article class="step" data-step="3">
+          <div class="step__dot">3</div>
+          <div class="step__card">
+            <h4>Lắp ráp & đấu nối</h4>
+            <p>Ráp phần cứng, đấu nối cảm biến với vi điều khiển, kiểm tra dây dẫn và nguồn cấp trước khi lập trình.</p>
+          </div>
+        </article>
+
+        <article class="step" data-step="4">
+          <div class="step__dot">4</div>
+          <div class="step__card">
+            <h4>Lập trình điều khiển</h4>
+            <p>Viết code đọc cảm biến, xử lý logic điều kiện và điều khiển relay kích hoạt thiết bị điện.</p>
+          </div>
+        </article>
+
+        <article class="step" data-step="5">
+          <div class="step__dot">5</div>
+          <div class="step__card">
+            <h4>Tích hợp IoT</h4>
+            <p>Cấu hình MQTT broker, đăng ký thiết bị và xây dựng giao diện theo dõi trên điện thoại hoặc máy tính.</p>
+          </div>
+        </article>
+
+        <article class="step" data-step="6">
+          <div class="step__dot">6</div>
+          <div class="step__card">
+            <h4>Kiểm thử & trình diễn</h4>
+            <p>Chạy thử toàn bộ chu trình, xử lý lỗi, hoàn thiện vỏ mô hình và chuẩn bị bài thuyết trình.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TÍNH NĂNG ================= -->
+  <section class="section features" id="tinh-nang">
+    <div class="container">
+      <div class="section__head">
+        <span class="eyebrow" data-reveal>Tính năng</span>
+        <h2 class="section__title" data-reveal data-reveal-delay="0.08">
+          Những gì ngôi nhà mô hình <span class="grad-text">tự làm được</span>
+        </h2>
+        <p class="section__desc" data-reveal data-reveal-delay="0.16">
+          Mỗi tính năng đều xuất phát từ một tình huống cụ thể, kết hợp cảm biến và
+          chương trình xử lý để tạo ra giá trị thực tế.
+        </p>
+      </div>
+    </div>
+
+    <div class="features__viewport">
+      <div class="features__track" id="features-track">
+
+        <article class="feature-card" data-tilt="9">
+          <div class="feature-card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg></div>
+          <h3>Đèn tự động theo ánh sáng</h3>
+          <p>Cảm biến LDR đo cường độ ánh sáng. Khi trời tối, đèn hành lang bật tự động; khi đủ sáng, đèn tắt để tiết kiệm điện.</p>
+          <span class="feature-card__tag">Tiết kiệm điện</span>
+        </article>
+
+        <article class="feature-card" data-tilt="9">
+          <div class="feature-card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a6 6 0 0 0-6 6c0 3-2 4-2 7a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4c0-3-2-4-2-7a6 6 0 0 0-6-6z"/></svg></div>
+          <h3>Cảnh báo chuyển động</h3>
+          <p>Cảm biến PIR phát hiện có người di chuyển trong vùng giám sát, lập tức kích hoạt đèn và gửi cảnh báo tới điện thoại.</p>
+          <span class="feature-card__tag">An toàn</span>
+        </article>
+
+        <article class="feature-card" data-tilt="9">
+          <div class="feature-card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0z"/></svg></div>
+          <h3>Giám sát nhiệt độ & độ ẩm</h3>
+          <p>DHT22 đo liên tục nhiệt độ và độ ẩm, hiển thị trên màn hình LCD và cảnh báo khi vượt ngưỡng an toàn đã đặt.</p>
+          <span class="feature-card__tag">Sức khỏe</span>
+        </article>
+
+        <article class="feature-card" data-tilt="9">
+          <div class="feature-card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11V6a2 2 0 1 1 4 0v5"/><path d="M13 11V5a2 2 0 1 1 4 0v9a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6v-3a2 2 0 0 1 4 0"/></svg></div>
+          <h3>Điều khiển từ xa</h3>
+          <p>Nhờ MQTT và WiFi, người dùng bật/tắt thiết bị, xem trạng thái nhà từ bất kỳ đâu chỉ với chiếc điện thoại.</p>
+          <span class="feature-card__tag">Tiện lợi</span>
+        </article>
+
+        <article class="feature-card" data-tilt="9">
+          <div class="feature-card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12a7 7 0 0 1 14 0v6a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z"/><path d="M3 12h2M19 12h2M12 3v2"/></svg></div>
+          <h3>Cảnh báo âm thanh</h3>
+          <p>Cảm biến micro nhận dạng tiếng động bất thường như kính vỡ, trong khoảng 2 giây sẽ phát còi báo và gửi thông báo.</p>
+          <span class="feature-card__tag">Bảo vệ</span>
+        </article>
+
+        <article class="feature-card" data-tilt="9">
+          <div class="feature-card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="12" rx="2.5"/><path d="M2 10h20M6 15h5"/></svg></div>
+          <h3>Hiển thị trạng thái</h3>
+          <p>Màn hình LCD hiển thị trực quan nhiệt độ, độ ẩm, trạng thái cửa và đèn, giúp người dùng theo dõi ngay tại chỗ.</p>
+          <span class="feature-card__tag">Minh bạch</span>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= YÊU CẦU SẢN PHẨM ================= -->
+  <section class="section requirements" id="yeu-cau">
+    <div class="container">
+      <div class="section__head">
+        <span class="eyebrow" data-reveal>Yêu cầu</span>
+        <h2 class="section__title" data-reveal data-reveal-delay="0.08">
+          Tiêu chí của một sản phẩm đạt yêu cầu
+        </h2>
+        <p class="section__desc" data-reveal data-reveal-delay="0.16">
+          Sản phẩm phải vừa đáp ứng kỹ thuật, vừa dễ sử dụng và có ý nghĩa thực tiễn.
+        </p>
+      </div>
+
+      <div class="req__grid">
+        <div class="req__list" data-stagger>
+          <div class="req__item">
+            <span class="req__check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l6 6L20 6"/></svg></span>
+            <div><h4>Hoạt động ổn định</h4><p>Phản hồi đúng với thay đổi môi trường, không tự reset hoặc treo máy trong thời gian dài.</p></div>
+          </div>
+          <div class="req__item">
+            <span class="req__check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l6 6L20 6"/></svg></span>
+            <div><h4>Dễ sử dụng</h4><p>Giao diện trên điện thoại đơn giản, dễ hiểu với người mới — không cần kiến thức chuyên môn.</p></div>
+          </div>
+          <div class="req__item">
+            <span class="req__check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l6 6L20 6"/></svg></span>
+            <div><h4>Tiết kiệm năng lượng</h4><p>Thiết bị ở trạng thái chờ tiêu thụ điện thấp, sử dụng nguồn pin dự phòng và tấm solar bổ sung.</p></div>
+          </div>
+          <div class="req__item">
+            <span class="req__check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l6 6L20 6"/></svg></span>
+            <div><h4>An toàn điện</h4><p>Mọi mạch điện dùng nguồn 5V, có bảo vệ quá tải và dùng relay công suất lớn để tách mạch điều khiển.</p></div>
+          </div>
+          <div class="req__item">
+            <span class="req__check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l6 6L20 6"/></svg></span>
+            <div><h4>Trình bày thuyết phục</h4><p>Vỏ mô hình gọn gàng, dễ tháo lắp để giới thiệu từng cơ chế hoạt động bên trong.</p></div>
+          </div>
+          <div class="req__item">
+            <span class="req__check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l6 6L20 6"/></svg></span>
+            <div><h4>Tính bền vững</h4><p>Vật liệu phổ biến, dễ thay thế khi hỏng và có thể mở rộng thêm tính năng trong tương lai.</p></div>
+          </div>
+        </div>
+
+        <div data-reveal="right">
+          <table class="req__table">
+            <thead>
+              <tr><th>Tiêu chí</th><th>Mô tả</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Độ ổn định</td><td>Chạy liên tục không lỗi</td></tr>
+              <tr><td>Tốc độ phản hồi</td><td>Không quá 2 giây</td></tr>
+              <tr><td>Kết nối</td><td>WiFi 2.4GHz • MQTT</td></tr>
+              <tr><td>Nguồn điện</td><td>5V DC • Pin dự phòng</td></tr>
+              <tr><td>Chi phí ước tính</td><td>Dưới 500.000 đồng</td></tr>
+              <tr><td>Đối tượng</td><td>Học sinh THPT</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= STATS ================= -->
+  <section class="section stats" id="hieu-qua">
+    <div class="container">
+      <div class="section__head section__head--center">
+        <span class="eyebrow" data-reveal>Hiệu quả</span>
+        <h2 class="section__title" data-reveal data-reveal-delay="0.08">
+          Giá trị mang lại cho cộng đồng
+        </h2>
+      </div>
+
+      <div class="stats__grid" data-stagger>
+        <div class="stat">
+          <div class="stat__num" data-count="30" data-suffix="%">0%</div>
+          <div class="stat__label">Giảm tiêu thụ điện</div>
+          <div class="stat__sub">Ở chế độ chiếu sáng tự động</div>
+        </div>
+        <div class="stat">
+          <div class="stat__num" data-count="2" data-suffix="s">0s</div>
+          <div class="stat__label">Thời gian phản hồi</div>
+          <div class="stat__sub">Từ cảm biến đến cảnh báo</div>
+        </div>
+        <div class="stat">
+          <div class="stat__num" data-count="24" data-suffix="/7">0/7</div>
+          <div class="stat__label">Giám sát liên tục</div>
+          <div class="stat__sub">Kết nối từ xa mọi lúc</div>
+        </div>
+        <div class="stat">
+          <div class="stat__num" data-count="8" data-suffix="+">0+</div>
+          <div class="stat__label">Loại cảm biến</div>
+          <div class="stat__sub">Tích hợp trong một mô hình</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MARQUEE ================= -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee__track">
+      <span class="marquee__item"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M10 2v4M14 2v4M2 10h4M18 10h4"/></svg>ESP32</span>
+      <span class="marquee__item"><svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 0 1 14 0v6a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z"/></svg>MQTT</span>
+      <span class="marquee__item"><svg viewBox="0 0 24 24"><path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0z"/></svg>DHT22</span>
+      <span class="marquee__item"><svg viewBox="0 0 24 24"><path d="M12 2a6 6 0 0 0-6 6c0 3-2 4-2 7a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4c0-3-2-4-2-7a6 6 0 0 0-6-6z"/></svg>PIR</span>
+      <span class="marquee__item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2"/></svg>LDR</span>
+      <span class="marquee__item"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="2"/></svg>Relay 4K</span>
+      <span class="marquee__item"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="12" rx="2.5"/></svg>LCD I2C</span>
+      <span class="marquee__item"><svg viewBox="0 0 24 24"><path d="M4 10v4h4l5 4V6L8 10z"/></svg>Buzzer</span>
+    </div>
+  </div>
+
+  <!-- ================= FAQ ================= -->
+  <section class="section faq" id="faq">
+    <div class="container">
+      <div class="section__head section__head--center">
+        <span class="eyebrow" data-reveal>Hỏi đáp</span>
+        <h2 class="section__title" data-reveal data-reveal-delay="0.08">
+          Giải đáp thắc mắc
+        </h2>
+      </div>
+
+      <div class="faq__list" data-stagger>
+        <div class="faq__item">
+          <button class="faq__q" aria-expanded="false">
+            <span>Đây có phải là một ngôi nhà thật không?</span>
+            <span class="faq__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+          </button>
+          <div class="faq__a"><div><p>Không. Đây là một mô hình giáo dục ở quy mô thu nhỏ, được thiết kế để học sinh tự lắp ráp và trình diễn. Toàn bộ linh kiện đều là module phổ biến, giá thành phản chăng.</p></div></div>
+        </div>
+
+        <div class="faq__item">
+          <button class="faq__q" aria-expanded="false">
+            <span>Cần điều kiện gì để vận hành mô hình?</span>
+            <span class="faq__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+          </button>
+          <div class="faq__a"><div><p>Một nguồn điện 5V, mạng WiFi 2.4GHz và một chiếc điện thoại có cài ứng dụng MQTT để theo dõi. Không cần máy tính khi hệ thống đã được lập trình sẵn.</p></div></div>
+        </div>
+
+        <div class="faq__item">
+          <button class="faq__q" aria-expanded="false">
+            <span>Mất bao lâu để hoàn thành một mô hình?</span>
+            <span class="faq__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+          </button>
+          <div class="faq__a"><div><p>Với mô hình cơ bản, một nhóm 3–4 học sinh cần khoảng 4–6 tuần để hoàn thành đầy đủ 6 bước, tính cả thời gian tìm hiểu và lập trình.</p></div></div>
+        </div>
+
+        <div class="faq__item">
+          <button class="faq__q" aria-expanded="false">
+            <span>Mô hình có thể mở rộng thêm tính năng không?</span>
+            <span class="faq__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+          </button>
+          <div class="faq__a"><div><p>Hoàn toàn có thể. Board ESP32 còn nhiều chân trống cho phép bổ sung camera, cảm biến khí, điều khiển máy lạnh hoặc tích hợp trợ lý ảo bằng giọng nói.</p></div></div>
+        </div>
+
+        <div class="faq__item">
+          <button class="faq__q" aria-expanded="false">
+            <span>Sản phẩm có an toàn cho người dùng không?</span>
+            <span class="faq__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+          </button>
+          <div class="faq__a"><div><p>Có. Toàn bộ hệ thống dùng nguồn 5V thấp, mạch được bọc cách điện, relay tách mạch điều khiển với mạch công suất và có cầu chì bảo vệ quá tải.</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= THÔNG ĐIỆP ================= -->
+  <section class="message" id="thong-diep">
+    <div class="container">
+      <div class="message__inner" data-reveal="zoom">
+        <div class="message__quote">
+          <span>Nhà thông minh không chỉ là công nghệ —</span>
+          <span>đó là cách chúng ta </span>
+          <span class="grad-text">chăm sóc ngôi nhà của mình.</span>
+        </div>
+        <p class="message__text">
+          Mỗi bước trong dự án đều bắt đầu từ một nhu cầu thực tế và kết thúc bằng
+          một sản phẩm có thể dùng được. Chúng em muốn mỗi người đều có thể tự tay
+          xây dựng ngôi nhà thông minh đầu tiên của mình.
+        </p>
+        <div class="message__cta">
+          <a class="btn btn--primary btn--lg cta-scroll" href="presentation.html" data-transition data-magnetic="0.26">
+            Bắt đầu bài thuyết trình
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a class="btn btn--ghost btn--lg" href="#muc-tieu" data-magnetic="0.2">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            Xem lại từ đầu
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer__grid">
+      <div class="footer__about">
+        <a class="nav__brand" href="#hero">
+          <span class="nav__logo">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>
+              <circle class="fill" cx="12" cy="4" r="1.4"/>
+            </svg>
+          </span>
+          <span>Nhà Thông Minh</span>
+        </a>
+        <p>
+          Dự án STEM mô hình nhà thông minh — ứng dụng IoT phục vụ học tập
+          và đời sống cộng đồng.
+        </p>
+      </div>
+
+      <div>
+        <h4>Khám phá</h4>
+        <div class="footer__links">
+          <a href="#muc-tieu">Mục tiêu</a>
+          <a href="#vat-lieu">Vật liệu</a>
+          <a href="#kien-truc">Kiến trúc hệ thống</a>
+          <a href="#quy-trinh">Quy trình 6 bước</a>
+        </div>
+      </div>
+
+      <div>
+        <h4>Kết nối</h4>
+        <div class="footer__links">
+          <a href="#tinh-nang">Tính năng</a>
+          <a href="#yeu-cau">Yêu cầu sản phẩm</a>
+          <a href="#faq">Hỏi đáp</a>
+          <a href="presentation.html" data-transition>Bài thuyết trình</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer__bottom">
+      <span>© 2026 Dự án STEM — Nhà Thông Minh. Được xây dựng cho mục đích học tập.</span>
+      <div class="footer__socials">
+        <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+        <a href="#" aria-label="GitHub"><svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.4 3.4 0 0 0-.9-2.6c3-.3 6.2-1.5 6.2-6.7A5.2 5.2 0 0 0 19.9 5a4.9 4.9 0 0 0-.1-3.7s-1.2-.3-4 1.5a13.4 13.4 0 0 0-7 0C5.9 1 4.7 1.3 4.7 1.3A4.9 4.9 0 0 0 4.6 5a5.2 5.2 0 0 0-1.4 3.6c0 5.2 3.2 6.4 6.2 6.7a3.4 3.4 0 0 0-.9 2.6V22"/></svg></a>
+        <a href="#" aria-label="Email"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 6 10-6"/></svg></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ================= SCRIPTS =================
+     Thứ tự: vendor-guard (định nghĩa API) → core/motion/three/landing (định nghĩa module)
+     → boot (khởi động sau khi CDN sẵn sàng) -->
+<script src="assets/js/vendor-guard.js"></script>
+<script src="assets/js/core.js"></script>
+<script src="assets/js/motion.js"></script>
+<script src="assets/js/three-house.js"></script>
+<script src="assets/js/console3d.js"></script>
+<script src="assets/js/landing.js"></script>
+<script src="assets/js/boot.js"></script>
+
+</body>
+</html>
