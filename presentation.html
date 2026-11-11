@@ -13,6 +13,33 @@
 
 <link rel="stylesheet" href="assets/css/presentation.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+
+<script>
+/* Ghi đè chế độ chuyển động qua URL: ?motion=on | ?motion=off
+   (đặt trước mọi script khác để các module đọc matchMedia đều nhận
+   giá trị đã ghi đè) */
+(function () {
+  var q = /[?&]motion=(on|off)/.exec(window.location.search);
+  if (!q) return;
+  var forcedReduce = q[1] === 'off';
+  var native = window.matchMedia.bind(window);
+  window.matchMedia = function (query) {
+    var mq = native(query);
+    if (/prefers-reduced-motion/.test(query)) {
+      try {
+        Object.defineProperty(mq, 'matches', {
+          value: forcedReduce,
+          configurable: true,
+        });
+      } catch (e) {
+        mq.matches = forcedReduce;
+      }
+    }
+    return mq;
+  };
+  window.__motionOverride = q[1];
+})();
+</script>
 </head>
 
 <body>
@@ -79,9 +106,9 @@
             mang ý nghĩa lớn cho cộng đồng và môi trường giáo dục.
           </p>
           <div class="p-cover__meta" data-s data-depth="0.62">
-            <span>Lớp: ............</span>
-            <span>Nhóm: ............</span>
-            <span>Trường: ............</span>
+            <span><b>Nhóm:</b> Ngôi nhà thông minh</span>
+            <span><b>Lớp:</b> 9A6</span>
+            <span><b>Trường:</b> THCS Đoàn Thị Điểm</span>
           </div>
           <div class="p-cover__hint" data-s data-depth="0.55">
             <kbd>→</kbd> để tiếp tục · <kbd>O</kbd> xem tổng quan
@@ -90,10 +117,49 @@
       </div>
     </section>
 
+    <!-- ============ SLIDE 2 — VỀ NHÓM CHÚNG EM ============ -->
+    <section class="p-slide" data-title="Về nhóm" aria-hidden="true">
+      <div class="p-slide__inner">
+        <span class="p-eyebrow" data-s data-depth="0.92">01 — Về nhóm</span>
+        <h2 class="p-title" data-s data-depth="0.84">Nhóm <span class="p-grad">Ngôi nhà thông minh</span></h2>
+        <p class="p-lead" data-s data-depth="0.68">
+          Chúng em là học sinh lớp 9A6 trường THCS Đoàn Thị Điểm. Trong một
+          học kỳ, nhóm đã cùng nhau khảo sát, thiết kế và chế tạo mô hình
+          ngôi nhà thông minh ứng dụng IoT từ linh kiện thực tế.
+        </p>
+
+        <div class="p-mosaic">
+          <figure class="p-mosaic__item p-mosaic__item--a" data-s data-depth="0.58">
+            <img src="assets/img/model-09.jpg" alt="Mô hình nhà thông minh hoàn chỉnh" loading="lazy">
+            <figcaption>Mô hình hoàn chỉnh</figcaption>
+          </figure>
+          <figure class="p-mosaic__item p-mosaic__item--b" data-s data-depth="0.46">
+            <img src="assets/img/model-02.jpg" alt="Mặt trước mô hình nhà" loading="lazy">
+            <figcaption>Mặt trước</figcaption>
+          </figure>
+          <figure class="p-mosaic__item p-mosaic__item--c" data-s data-depth="0.38">
+            <img src="assets/img/model-05.jpg" alt="Bo mạch điện tử của dự án" loading="lazy">
+            <figcaption>Bo mạch điều khiển</figcaption>
+          </figure>
+          <figure class="p-mosaic__item p-mosaic__item--d" data-s data-depth="0.30">
+            <img src="assets/img/model-08.jpg" alt="Linh kiện điện tử dùng trong mô hình" loading="lazy">
+            <figcaption>Linh kiện điện tử</figcaption>
+          </figure>
+        </div>
+
+        <div class="p-badges" data-s data-depth="0.30">
+          <span class="p-badge p-badge--accent">Lớp 9A6</span>
+          <span class="p-badge">THCS Đoàn Thị Điểm</span>
+          <span class="p-badge">Dự án STEM</span>
+          <span class="p-badge">Ứng dụng IoT</span>
+        </div>
+      </div>
+    </section>
+
     <!-- ============ SLIDE 2 — MỤC TIÊU ============ -->
     <section class="p-slide" data-title="Mục tiêu" aria-hidden="true">
       <div class="p-slide__inner">
-        <span class="p-eyebrow" data-s data-depth="0.92">01 — Mục tiêu</span>
+        <span class="p-eyebrow" data-s data-depth="0.92">02 — Mục tiêu</span>
         <h2 class="p-title" data-s data-depth="0.84">Ba mục tiêu của <span class="p-grad">dự án</span></h2>
         <p class="p-lead" data-s data-depth="0.68">
           Dự án không chỉ dừng lại ở một sản phẩm để trưng bày, mà hướng đến
@@ -143,7 +209,7 @@
     <!-- ============ SLIDE 3 — VẬT LIỆU ============ -->
     <section class="p-slide" data-title="Vật liệu" aria-hidden="true">
       <div class="p-slide__inner">
-        <span class="p-eyebrow" data-s data-depth="0.92">02 — Vật liệu</span>
+        <span class="p-eyebrow" data-s data-depth="0.92">03 — Vật liệu</span>
         <h2 class="p-title" data-s data-depth="0.84">Linh kiện sử dụng trong <span class="p-grad">mô hình</span></h2>
         <p class="p-lead" data-s data-depth="0.68">
           Toàn bộ linh kiện đều là module phổ biến trong giáo dục STEM, dễ tìm mua,
@@ -173,7 +239,7 @@
     <!-- ============ SLIDE 4 — KIẾN TRÚC ============ -->
     <section class="p-slide" data-title="Kiến trúc hệ thống" aria-hidden="true">
       <div class="p-slide__inner">
-        <span class="p-eyebrow" data-s data-depth="0.92">03 — Kiến trúc</span>
+        <span class="p-eyebrow" data-s data-depth="0.92">04 — Kiến trúc</span>
         <h2 class="p-title" data-s data-depth="0.84">Hệ thống hoạt động <span class="p-grad">như thế nào</span></h2>
         <p class="p-lead" data-s data-depth="0.68">
           Dữ liệu từ các cảm biến được gửi về vi điều khiển, xử lý theo logic
@@ -235,7 +301,7 @@
     <!-- ============ SLIDE 5 — 6 BƯỚC ============ -->
     <section class="p-slide" data-title="Quy trình 6 bước" aria-hidden="true">
       <div class="p-slide__inner">
-        <span class="p-eyebrow" data-s data-depth="0.92">04 — Quy trình</span>
+        <span class="p-eyebrow" data-s data-depth="0.92">05 — Quy trình</span>
         <h2 class="p-title" data-s data-depth="0.84">Sáu bước thực hiện <span class="p-grad">dự án</span></h2>
         <p class="p-lead" data-s data-depth="0.68">
           Từ khảo sát nhu cầu đến khi sản phẩm hoàn thiện được trình diễn —
@@ -285,7 +351,7 @@
     <!-- ============ SLIDE 6 — TÍNH NĂNG ============ -->
     <section class="p-slide" data-title="Tính năng" aria-hidden="true">
       <div class="p-slide__inner">
-        <span class="p-eyebrow" data-s data-depth="0.92">05 — Tính năng</span>
+        <span class="p-eyebrow" data-s data-depth="0.92">06 — Tính năng</span>
         <h2 class="p-title" data-s data-depth="0.84">Những gì ngôi nhà mô hình <span class="p-grad">tự làm được</span></h2>
         <p class="p-lead" data-s data-depth="0.68">
           Mỗi tính năng đều xuất phát từ một tình huống cụ thể, kết hợp cảm biến và
@@ -347,7 +413,7 @@
     <!-- ============ SLIDE 7 — YÊU CẦU ============ -->
     <section class="p-slide" data-title="Yêu cầu sản phẩm" aria-hidden="true">
       <div class="p-slide__inner">
-        <span class="p-eyebrow" data-s data-depth="0.92">06 — Yêu cầu</span>
+        <span class="p-eyebrow" data-s data-depth="0.92">07 — Yêu cầu</span>
         <h2 class="p-title" data-s data-depth="0.84">Tiêu chí của một sản phẩm <span class="p-grad">đạt yêu cầu</span></h2>
         <p class="p-lead" data-s data-depth="0.68">
           Sản phẩm phải vừa đáp ứng yêu cầu kỹ thuật, vừa dễ sử dụng và mang ý nghĩa thực tiễn.
@@ -394,7 +460,7 @@
     <!-- ============ SLIDE 8 — HIỆU QUẢ ============ -->
     <section class="p-slide" data-title="Hiệu quả & giá trị" aria-hidden="true">
       <div class="p-slide__inner">
-        <span class="p-eyebrow" data-s data-depth="0.92">07 — Hiệu quả</span>
+        <span class="p-eyebrow" data-s data-depth="0.92">08 — Hiệu quả</span>
         <h2 class="p-title" data-s data-depth="0.84">Giá trị mang lại cho <span class="p-grad">cộng đồng</span></h2>
         <p class="p-lead" data-s data-depth="0.68">
           Những con số dưới đây là kết quả kỳ vọng của mô hình khi áp dụng
@@ -448,7 +514,7 @@
     <!-- ============ SLIDE 9 — HƯỚNG PHÁT TRIỂN ============ -->
     <section class="p-slide" data-title="Hướng phát triển" aria-hidden="true">
       <div class="p-slide__inner">
-        <span class="p-eyebrow" data-s data-depth="0.92">08 — Hướng phát triển</span>
+        <span class="p-eyebrow" data-s data-depth="0.92">09 — Hướng phát triển</span>
         <h2 class="p-title" data-s data-depth="0.84">Những bước tiếp theo của <span class="p-grad">mô hình</span></h2>
         <p class="p-lead" data-s data-depth="0.68">
           Mô hình hiện tại là nền tảng. Dưới đây là các hướng mở rộng mà nhóm

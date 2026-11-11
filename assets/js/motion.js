@@ -251,6 +251,27 @@
 
     var tl = gsap.timeline({ delay: 0.15 });
 
+    /* ---------------------------------------------------------------
+       CHẾ ĐỘ GIẢM CHUYỂN ĐỘNG (prefers-reduced-motion: reduce)
+
+       Người dùng bật "Animation effects" = Off trong Windows → Chrome
+       báo reduce. Trước đây Motion.init() bail-out hoàn toàn khiến
+       trang đứng hình, tệ hơn cả lúc không có animation. Nay ta vẫn
+       cho nội dung xuất hiện, chỉ bỏ chuyển động LỚN (dịch, xoay,
+       scale) và giữ lại fade — an toàn cho người mắc chóng mặt.
+       --------------------------------------------------------------- */
+    if (reduce) {
+      if (badge) tl.from(badge, { opacity: 0, duration: 0.4 }, 0);
+      if (words.length) tl.from(words, { opacity: 0, duration: 0.5, stagger: 0.04 }, 0);
+      if (sub) tl.from(sub, { opacity: 0, duration: 0.5 }, 0.1);
+      if (cta.length) tl.from(cta, { opacity: 0, duration: 0.5, stagger: 0.06 }, 0.15);
+      if (meta.length) tl.from(meta, { opacity: 0, duration: 0.5, stagger: 0.05 }, 0.2);
+      if (stage) tl.from(stage, { opacity: 0, duration: 0.7 }, 0.1);
+      if (tags.length) tl.from(tags, { opacity: 0, duration: 0.5, stagger: 0.05 }, 0.25);
+      if (hint) tl.from(hint, { opacity: 0, duration: 0.4 }, 0.3);
+      return tl;
+    }
+
     if (badge) {
       tl.from(badge, { y: -26, opacity: 0, duration: 0.7, ease: 'back.out(1.7)' });
     }
@@ -339,20 +360,22 @@
       });
     }
 
-    /* --- Parallax nhiều lầy --- */
-    $$('[data-parallax]').forEach(function (el) {
-      var depth = parseFloat(el.getAttribute('data-parallax')) || 0.2;
-      gsap.to(el, {
-        yPercent: -depth * 100,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: el.closest('section') || el,
-          start: 'top bottom',
-          end: 'bottom top',
-          scrub: true,
-        },
+    /* --- Parallax nhiều lầy --- (tắt khi giảm chuyển động) --- */
+    if (!reduce) {
+      $$('[data-parallax]').forEach(function (el) {
+        var depth = parseFloat(el.getAttribute('data-parallax')) || 0.2;
+        gsap.to(el, {
+          yPercent: -depth * 100,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: el.closest('section') || el,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: true,
+          },
+        });
       });
-    });
+    }
 
     /* --- Reveal chung --- */
     var revealEls = $$('[data-reveal]');
@@ -361,11 +384,14 @@
       var delay = parseFloat(el.getAttribute('data-reveal-delay')) || 0;
       var from = { opacity: 0, duration: 1, ease: 'power3.out', delay: delay };
 
-      if (kind === 'left') from.x = -60;
-      else if (kind === 'right') from.x = 60;
-      else if (kind === 'zoom') from.scale = 0.86;
-      else if (kind === 'flip') { from.rotateX = 24; from.perspective = 900; }
-      else from.y = 46;
+      /* reduce → chỉ fade, KHÔNG translate/rotate/scale */
+      if (!reduce) {
+        if (kind === 'left') from.x = -60;
+        else if (kind === 'right') from.x = 60;
+        else if (kind === 'zoom') from.scale = 0.86;
+        else if (kind === 'flip') { from.rotateX = 24; from.perspective = 900; }
+        else from.y = 46;
+      }
 
       gsap.from(el, {
         ...from,
@@ -377,7 +403,11 @@
        gsap.from() khoá opacity:0 ngay từ đầu. Nếu ScrollTrigger không kịp
        kích hoạt (font load lệch layout, tab chạy nền, GSAP lag) phần tử sẽ
        "tàng hình" vĩnh viễn. Ta dùng IntersectionObserver làm lưới an toàn:
-       element vào khung nhìn → chờ 1.6s → nếu vẫn tàng hình thì gỡ hết. */
+       element vào khung nhìn → chờ 1.6s → nếu vẫn tàng hình thì gỡ hết.
+
+       Mạng lưới phủ rộng: mọi phần tử có thể bị gsap.from() đặt opacity:0
+       đều phải có lưới an toàn, nếu không sẽ xuất hiện lỗi "nội dung biến
+       mất" trên một số thiết bị. */
     function safeReveal(els) {
       if (!els || !els.length) return;
       if (!('IntersectionObserver' in window)) return;
@@ -398,25 +428,102 @@
         });
       }, { threshold: 0.01 });
       els.forEach(function (el) { io.observe(el); });
+      return io;
     }
 
-    safeReveal(revealEls);
-    safeReveal($$('[data-stagger] > *'));
-    safeReveal($$('.mat-chip'));
-    safeReveal($$('.message__quote span'));
-    safeReveal($$('.step'));
+    var SAFE_SELECTORS = [
+      '[data-reveal]',
+      '[data-stagger] > *',
+      '.mat-chip',
+      '.message__quote span',
+      '.step',
+      '.goal-card',
+      '.feature-card',
+      '.faq__item',
+      '.stat',
+      '.req__item',
+      '.illus-shot',
+      '.arch__node',
+      '.marquee__item',
+    ];
+
+    function collectSafeEls() {
+      var out = [];
+      SAFE_SELECTORS.forEach(function (sel) {
+        $$(sel).forEach(function (el) {
+          if (out.indexOf(el) === -1) out.push(el);
+        });
+      });
+      return out;
+    }
+
+    safeReveal(collectSafeEls());
+
+    /* --- Watchdog toàn cục ---
+       Quét mỗi 3s: element đang hiện trong khung nhìn nhưng opacity < 0.05
+       → buộc hiện. Đây là lưới an toàn cuối cùng cho mọi trường hợp
+       (GSAP lag, tab nền, layout đổi đột ngột, ảnh lazy-load). */
+    function forceRevealStuck() {
+      var vh = window.innerHeight || 800;
+      var vw = window.innerWidth || 1200;
+      var nodes = document.querySelectorAll(
+        '[data-reveal], [data-stagger] > *, .goal-card, .feature-card, .faq__item, ' +
+        '.stat, .req__item, .illus-shot, .arch__node, .mat-chip, .step'
+      );
+      for (var i = 0; i < nodes.length; i++) {
+        var el = nodes[i];
+        var r = el.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > vh || r.right < 0 || r.left > vw) continue;
+        if (r.width === 0 && r.height === 0) continue;
+        var op = parseFloat(window.getComputedStyle(el).opacity);
+        if (!isNaN(op) && op < 0.05) {
+          gsap.set(el, { clearProps: 'opacity,transform,visibility' });
+          el.style.opacity = '1';
+          el.style.visibility = 'visible';
+        }
+      }
+    }
+    window.setInterval(forceRevealStuck, 3000);
+
+    /* --- Refresh sau khi ảnh lazy-load xong ---
+       .illus-shot dùng loading="lazy": chiều cao ảnh thay đổi sau khi
+       tải → ScrollTrigger tính sai vị trí → phần tử tàng hình. */
+    var gallery = $('.illus-gallery');
+    if (gallery && window.ResizeObserver) {
+      try {
+        var galleryRO = new ResizeObserver(function () {
+          ST.refresh();
+        });
+        galleryRO.observe(gallery);
+      } catch (e) {}
+    }
+    $$('img[loading="lazy"]').forEach(function (img) {
+      if (!img.complete) {
+        img.addEventListener('load', function () {
+          ST.refresh();
+        }, { once: true });
+        img.addEventListener('error', function () {
+          ST.refresh();
+        }, { once: true });
+      }
+    });
 
     /* --- Stagger cho nhóm card --- */
     $$('[data-stagger]').forEach(function (group) {
       var kids = group.children;
       if (!kids.length) return;
+      var vars = reduce
+        ? { opacity: 0, duration: 0.7, stagger: 0.05, ease: 'power2.out' }
+        : {
+            y: 52,
+            opacity: 0,
+            rotateX: -14,
+            duration: 0.95,
+            stagger: 0.09,
+            ease: 'power3.out',
+          };
       gsap.from(kids, {
-        y: 52,
-        opacity: 0,
-        rotateX: -14,
-        duration: 0.95,
-        stagger: 0.09,
-        ease: 'power3.out',
+        ...vars,
         scrollTrigger: { trigger: group, start: 'top 84%', toggleActions: 'play none none none' },
       });
     });
@@ -493,6 +600,14 @@
     var chips = $$('.mat-chip');
     if (chips.length) {
       chips.forEach(function (chip, i) {
+        if (reduce) {
+          gsap.from(chip, {
+            opacity: 0,
+            duration: 0.6,
+            scrollTrigger: { trigger: chip, start: 'top 90%', toggleActions: 'play none none none' },
+          });
+          return;
+        }
         gsap.fromTo(
           chip,
           { y: 60 + i * 8, opacity: 0, rotateX: -30, z: -160 },
@@ -509,10 +624,13 @@
       });
     }
 
-    /* --- Section "Tính năng": cuộn ngang (pin + scrub) --- */
+    /* --- Section "Tính năng": cuộn ngang (pin + scrub) ---
+       KHÔNG gate theo isTouch: laptop cảm ứng vẫn dùng chuột,
+       hiệu ứng này phải chạy trên mọi desktop. Chỉ bỏ qua khi
+       người dùng yêu cầu giảm chuyển động. */
     var featTrack = $('#features-track');
     var featViewport = $('.features__viewport');
-    if (featTrack && featViewport && !Core.isTouch) {
+    if (featTrack && featViewport && !reduce) {
       var getScrollAmount = function () {
         return Math.max(0, featTrack.scrollWidth - featViewport.offsetWidth);
       };
@@ -536,9 +654,9 @@
       }
     }
 
-    /* --- Marquee: dừng khi hover --- */
+    /* --- Marquee: dừng khi hover --- (tắt vòng lặp vô hạn khi reduce) --- */
     var marqueeTrack = $('.marquee__track');
-    if (marqueeTrack) {
+    if (marqueeTrack && !reduce) {
       var mq = gsap.to(marqueeTrack, { xPercent: -50, duration: 26, ease: 'none', repeat: -1 });
       var marquee = $('.marquee');
       if (marquee) {
@@ -550,15 +668,24 @@
     /* --- Thông điệp: từng dòng + hào quang --- */
     var msgLines = $$('.message__quote span');
     if (msgLines.length) {
-      gsap.from(msgLines, {
-        y: 60,
-        opacity: 0,
-        rotateX: -35,
-        duration: 0.95,
-        stagger: 0.07,
-        ease: 'expo.out',
-        scrollTrigger: { trigger: '.message', start: 'top 70%', toggleActions: 'play none none none' },
-      });
+      if (reduce) {
+        gsap.from(msgLines, {
+          opacity: 0,
+          duration: 0.7,
+          stagger: 0.05,
+          scrollTrigger: { trigger: '.message', start: 'top 70%', toggleActions: 'play none none none' },
+        });
+      } else {
+        gsap.from(msgLines, {
+          y: 60,
+          opacity: 0,
+          rotateX: -35,
+          duration: 0.95,
+          stagger: 0.07,
+          ease: 'expo.out',
+          scrollTrigger: { trigger: '.message', start: 'top 70%', toggleActions: 'play none none none' },
+        });
+      }
     }
 
     /* --- Điều khiển zoom camera 3D theo scroll --- */
@@ -602,24 +729,37 @@
      TILT 3D THEO CON TRỎ (fisheye)
      --------------------------------------------------------------- */
   function initTilt() {
-    if (Core.isTouch || reduce) return;
+    /* Tilt là tương tác HOVER do người dùng chủ động (không phải chuyển
+       động tự động) → vẫn cho phép khi reduce. Chỉ cần có chuột thật. */
+    if (!Core.hasFinePointer) return;
     $$('[data-tilt]').forEach(function (el) {
       var strength = parseFloat(el.getAttribute('data-tilt')) || 8;
-      var rx = 0, ry = 0, trx = 0, try_ = 0;
-      var raf = null;
 
-      function loop() {
-        rx += (trx - rx) * 0.12;
-        ry += (try_ - ry) * 0.12;
-        el.style.transform =
-          'perspective(1000px) rotateX(' + rx.toFixed(2) + 'deg) rotateY(' + ry.toFixed(2) + 'deg) translateZ(0)';
-        if (Math.abs(trx - rx) > 0.02 || Math.abs(try_ - ry) > 0.02) {
-          raf = requestAnimationFrame(loop);
-        } else {
-          raf = null;
-        }
+      /* Dùng gsap.quickTo để GSAP tự hợp nhất transform với các
+         tween khác đang ghi cùng thuộc tính (vd. [data-stagger] > *
+         dùng rotateX). Viết thẳng el.style.transform sẽ đè lên
+         GSAP → phần tử nhấp nháy / giật. */
+      var rotX = null;
+      var rotY = null;
+      if (window.gsap) {
+        rotX = gsap.quickTo(el, 'rotationX', { duration: 0.45, ease: 'power3.out' });
+        rotY = gsap.quickTo(el, 'rotationY', { duration: 0.45, ease: 'power3.out' });
       }
-      function start() { if (!raf) raf = requestAnimationFrame(loop); }
+
+      var trx = 0;
+      var try_ = 0;
+
+      function apply() {
+        if (rotX && rotY) {
+          rotX(trx);
+          rotY(try_);
+          return;
+        }
+        // Fallback vanilla (không có GSAP)
+        el.style.transform =
+          'perspective(1000px) rotateX(' + trx.toFixed(2) + 'deg) rotateY(' +
+          try_.toFixed(2) + 'deg) translateZ(0)';
+      }
 
       el.addEventListener('mousemove', function (e) {
         var r = el.getBoundingClientRect();
@@ -627,12 +767,12 @@
         var py = (e.clientY - r.top) / r.height - 0.5;
         trx = -py * strength;
         try_ = px * strength;
-        start();
+        apply();
       });
       el.addEventListener('mouseleave', function () {
         trx = 0;
         try_ = 0;
-        start();
+        apply();
       });
     });
   }
@@ -643,7 +783,7 @@
   Motion.init = function () {
     refreshLibs();
 
-    if (!hasGsap || reduce) {
+    if (!hasGsap) {
       // Bản vanilla: chỉ chạy scramble + tilt nhẹ
       var scr = $('.hero__subtitle .scramble');
       if (scr && scr.getAttribute('data-text')) {
@@ -653,14 +793,27 @@
       return;
     }
 
-    initLenis();
+    /* ---------------------------------------------------------------
+       prefers-reduced-motion: KHÔNG bail-out.
+
+       Trước đây `if (!hasGsap || reduce) return;` khiến trang đứng
+       hình hoàn toàn khi Windows tắt "Animation effects" — nội dung
+       vẫn còn opacity:0 từ CSS/JS nên có thể bị tàng hình.
+
+       Nay: vẫn chạy GSAP nhưng chỉ với FADE (xem các nhánh `reduce`
+       bên trong heroTimeline / initScrollTriggers), tắt parallax, pin
+       cuộn ngang, xoay 3D, float loop, Lenis smooth-scroll.
+       --------------------------------------------------------------- */
+    if (!reduce) {
+      initLenis();
+    }
     heroTimeline();
     initScrollTriggers();
     initTilt();
 
-    // Scramble tagline sau khi hero vào
+    // Scramble tagline sau khi hero vào (bỏ qua khi giảm chuyển động)
     var scr = $('.hero__subtitle .scramble');
-    if (scr && scr.getAttribute('data-text')) {
+    if (!reduce && scr && scr.getAttribute('data-text')) {
       gsap.delayedCall(1.1, function () {
         Motion.scramble(scr, scr.getAttribute('data-text'), { duration: 1.5 });
       });

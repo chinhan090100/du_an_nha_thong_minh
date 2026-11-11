@@ -13,6 +13,12 @@
   };
   var reduce = !!(window.Vendor && window.Vendor.reducedMotion);
   var isTouch = !!(window.Vendor && window.Vendor.isTouch);
+  /* Chuột thật hay chỉ màn hình cảm ứng? (laptop cảm ứng vẫn có chuột) */
+  var hasFinePointer = window.Core && window.Core.hasFinePointer !== undefined
+    ? window.Core.hasFinePointer
+    : (window.Vendor && window.Vendor.hasFinePointer !== undefined
+        ? window.Vendor.hasFinePointer
+        : !isTouch);
 
   /* ---------------------------------------------------------------
      1. PARTICLE CONSTELLATION CANVAS
@@ -75,7 +81,7 @@
       raf = requestAnimationFrame(frame);
 
       ctx.clearRect(0, 0, W, H);
-      var linkDist = isTouch ? 96 : 132;
+      var linkDist = hasFinePointer ? 132 : 96;
       var mouseDist = 190;
 
       for (var i = 0; i < particles.length; i++) {
@@ -255,7 +261,8 @@
      5. THÊM GÓC GRADIENT THEO CON TRỎ cho card
      --------------------------------------------------------------- */
   function initPointerGlow() {
-    if (isTouch || reduce) return;
+    /* Glow theo con trỏ = phản hồi chủ động → giữ khi reduce. */
+    if (!hasFinePointer) return;
     $$('.goal-card').forEach(function (card) {
       card.addEventListener('mousemove', function (e) {
         var r = card.getBoundingClientRect();
@@ -302,7 +309,7 @@
      8. GLOW THEO CON TRỎ (radial light) trên body
      --------------------------------------------------------------- */
   function initPointerGlowGlobal() {
-    if (isTouch || reduce) return;
+    if (!hasFinePointer) return;
     var glow = $('#pointer-glow');
     if (!glow) return;
     var x = 0, y = 0, cx = 0, cy = 0, raf = null;
@@ -326,6 +333,109 @@
   }
 
   /* ---------------------------------------------------------------
+     8. BẢNG CHẨN ĐOÁN (nhấn phím D)
+        Giúp xác nhận chính xác nguyên nhân "Chrome PC mất hiệu ứng"
+        trên máy thật thay vì đoán: GSAP/ScrollTrigger/Lenis/THREE/WebGL
+        đã nạp chưa, reducedMotion, hasFinePointer, maxTouchPoints, FPS.
+     --------------------------------------------------------------- */
+  function initDiagnostics() {
+    var panel = document.createElement('div');
+    panel.id = 'diag-panel';
+    panel.setAttribute('aria-hidden', 'true');
+    panel.innerHTML =
+      '<div class="diag-panel__hd">DIAGNOSTICS <button type="button" class="diag-panel__x" aria-label="Đóng">&times;</button></div>' +
+      '<div class="diag-panel__body"></div>';
+    document.body.appendChild(panel);
+    var body = panel.querySelector('.diag-panel__body');
+
+    var fpsSamples = [];
+    var last = performance.now();
+    (function tick(now) {
+      var dt = (now - last) / 1000;
+      last = now;
+      if (dt > 0) {
+        fpsSamples.push(1 / dt);
+        if (fpsSamples.length > 60) fpsSamples.shift();
+      }
+      if (panel.classList.contains('is-open')) render();
+      requestAnimationFrame(tick);
+    })(performance.now());
+
+    function row(label, value, ok) {
+      var cls = ok === undefined ? '' : ok ? 'ok' : 'bad';
+      return (
+        '<div class="diag-row"><span class="diag-row__k">' + label + '</span>' +
+        '<span class="diag-row__v ' + cls + '">' + value + '</span></div>'
+      );
+    }
+
+    function render() {
+      var gsapOk = typeof window.gsap !== 'undefined';
+      var stOk = gsapOk && !!window.ScrollTrigger;
+      var lenisOk = !!(window.Motion && window.Motion.lenis);
+      var threeOk = typeof window.THREE !== 'undefined';
+      var houseOk = !!(window.House3D && window.House3D.scene);
+      var webgl = false;
+      try {
+        var c = document.createElement('canvas');
+        webgl = !!(c.getContext('webgl2') || c.getContext('webgl'));
+      } catch (e) {}
+      var fps = 0;
+      if (fpsSamples.length) {
+        var s = 0;
+        for (var i = 0; i < fpsSamples.length; i++) s += fpsSamples[i];
+        fps = Math.round(s / fpsSamples.length);
+      }
+      var stCount = 0;
+      try {
+        if (window.ScrollTrigger && window.ScrollTrigger.getAll) {
+          stCount = window.ScrollTrigger.getAll().length;
+        }
+      } catch (e) {}
+
+      body.innerHTML =
+        row('GSAP', gsapOk ? window.gsap.version : 'KHÔNG CÓ', gsapOk) +
+        row('ScrollTrigger', stOk ? 'đã nạp' : 'KHÔNG CÓ', stOk) +
+        row('Số ScrollTrigger', stCount) +
+        row('Lenis smooth-scroll', lenisOk ? 'đang chạy' : 'tắt') +
+        row('THREE', threeOk ? window.THREE.REVISION : 'KHÔNG CÓ', threeOk) +
+        row('House3D scene', houseOk ? 'đã tạo' : 'chưa', houseOk) +
+        row('WebGL', webgl ? 'hỗ trợ' : 'KHÔNG', webgl) +
+        row('prefers-reduced-motion', reduce ? 'REDUCE (tắt motion lớn)' : 'no-preference', !reduce) +
+        row('hasFinePointer (chuột)', hasFinePointer ? 'CÓ — hiệu ứng chuột BẬT' : 'KHÔNG — tắt hiệu ứng chuột', hasFinePointer) +
+        row('hover: hover', window.matchMedia('(hover: hover)').matches ? 'có' : 'không') +
+        row('maxTouchPoints', navigator.maxTouchPoints || 0) +
+        row('isTouch', isTouch ? 'true' : 'false') +
+        row('hardwareConcurrency', navigator.hardwareConcurrency || '?') +
+        row('FPS', fps, fps >= 45) +
+        row('Viewport', window.innerWidth + ' × ' + window.innerHeight) +
+        row('DPR', window.devicePixelRatio || 1);
+    }
+
+    function toggle(force) {
+      var open = force !== undefined ? force : !panel.classList.contains('is-open');
+      panel.classList.toggle('is-open', open);
+      panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+      if (open) render();
+    }
+
+    panel.querySelector('.diag-panel__x').addEventListener('click', function () {
+      toggle(false);
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'd' && e.key !== 'D' && e.key !== 'đ' && e.key !== 'Đ') return;
+      var t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+      e.preventDefault();
+      toggle();
+    });
+
+    window.Diag = { toggle: toggle, render: render };
+  }
+
+  /* ---------------------------------------------------------------
      BOOT
      --------------------------------------------------------------- */
   Landing.init = function () {
@@ -337,5 +447,6 @@
     initPointerGlowGlobal();
     initScene();
     initConsole3D();
+    initDiagnostics();
   };
 })(window, document);

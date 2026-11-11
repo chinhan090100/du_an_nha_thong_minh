@@ -13,6 +13,43 @@
 
 <link rel="stylesheet" href="assets/css/style.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+
+<script>
+/* --------------------------------------------------------------------------
+   GHI ĐÈ CHẾ ĐỘ CHUYỂN ĐỘNG QUA URL (đặt trước mọi script khác)
+
+     ?motion=on   → ép BẬT hiệu ứng đầy đủ (kể cả khi Windows đang bật
+                    "Animation effects = Off", đây là nguyên nhân khiến
+                    Chrome PC mất hiệu ứng)
+     ?motion=off  → ép giảm chuyển động (fade-only)
+
+     Script phải chạy TRƯỚC core.js / vendor-guard.js để các module đọc
+     matchMedia đều nhận giá trị đã ghi đè.
+   -------------------------------------------------------------------------- */
+(function () {
+  var q = /[?&]motion=(on|off)/.exec(window.location.search);
+  if (!q) return;
+  var forcedReduce = q[1] === 'off';
+  var native = window.matchMedia.bind(window);
+  window.matchMedia = function (query) {
+    var mq = native(query);
+    if (/prefers-reduced-motion/.test(query)) {
+      /* MediaQueryList.matches là readonly trên prototype → phải định nghĩa
+         lại trên chính instance, nếu không gán sẽ bị bỏ qua âm thầm. */
+      try {
+        Object.defineProperty(mq, 'matches', {
+          value: forcedReduce,
+          configurable: true,
+        });
+      } catch (e) {
+        mq.matches = forcedReduce;
+      }
+    }
+    return mq;
+  };
+  window.__motionOverride = q[1];
+})();
+</script>
 </head>
 
 <body class="no-js">

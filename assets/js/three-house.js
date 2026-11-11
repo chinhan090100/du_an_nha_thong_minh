@@ -51,6 +51,12 @@
     tourTimer: null,
     fpsSamples: [],
     degradeLevel: 0,
+    photoGroup: null,
+    photoPanels: [],
+    photoHidden: [],
+    photoOn: false,
+    faceParts: { front: [], back: [], left: [], right: [] },
+    resizeObserver: null,
   };
 
   /* ---------------------------------------------------------------
@@ -201,7 +207,10 @@
     }
 
     state.renderer.setPixelRatio(state.dpr);
-    state.renderer.setSize(w, h);
+    /* setSize(w, h, false): không để three ghi style inline lên canvas →
+       CSS width:100%/height:100% giữ canvas phủ đúng khung, không letterbox
+       → camera.aspect khớp thực tế → nhà KHÔNG méo. */
+    state.renderer.setSize(w, h, false);
     state.renderer.shadowMap.enabled = true;
     state.renderer.shadowMap.type = T.PCFSoftShadowMap;
     state.renderer.toneMapping = T.ACESFilmicToneMapping;
@@ -230,8 +239,17 @@
     /* --- Postprocessing --- */
     setupComposer(T, w, h);
 
+    /* --- ẢNH THẬT dán lên mặt nhà --- */
+    try {
+      applyPhotoTextures(T);
+    } catch (e) {
+      /* ảnh lỗi → giữ nguyên mô hình procedural */
+      state.photoOn = false;
+    }
+
     state.clock = new T.Clock();
     bindEvents(container);
+    setupResizeObserver(container);
     start();
 
     House3D.scene = state;
@@ -500,6 +518,10 @@
     walls.receiveShadow = true;
     house.add(walls);
 
+    /* Nhóm geometry theo mặt tường — dùng để ẩn cửa/cửa sổ 3D khi
+       dán ảnh thật (ảnh đã có sẵn cửa & cửa sổ → chồng kép sẽ rối). */
+    state.faceParts = { front: [], back: [], left: [], right: [] };
+
     // Viền trang trí
     var trimMat = new T.MeshStandardMaterial({
       color: 0xe6edf5,
@@ -655,6 +677,9 @@
     );
     knob.position.set(0.36, 0.95, 2.24);
     house.add(knob);
+
+    /* Ghi nhớ geometry cửa mặt trước để ẩn khi dán ảnh thật */
+    state.faceParts.front.push(door, doorFrame, knob);
 
     // Bậc cửa
     var stepMat = new T.MeshStandardMaterial({ color: COLORS.stone, roughness: 0.9 });
@@ -839,6 +864,14 @@
       house.add(wg);
       state.windows.push(glass);
       state.glass.push(glass);
+
+      /* Ghi nhớ theo mặt để ẩn khi dán ảnh thật.
+         winPositions: z>2 → trước (+z), z<-2 → sau (-z),
+         x>2.5 → phải (+x), x<-2.5 → trái (-x) */
+      if (p[2] > 2) state.faceParts.front.push(wg);
+      else if (p[2] < -2) state.faceParts.back.push(wg);
+      else if (p[0] > 2.5) state.faceParts.right.push(wg);
+      else if (p[0] < -2.5) state.faceParts.left.push(wg);
     });
 
     // Ánh sáng trong phòng hắt ra qua kính (ngày: yếu, đêm: mạnh)
@@ -937,6 +970,174 @@
       base: baseMat,
       door: doorMat,
     };
+  }
+
+  /* ---------------------------------------------------------------
+     RESIZE — ResizeObserver trên container
+     ---------------------------------------------------------------
+     window 'resize' không bắt được mọi thay đổi layout (ví dụ khi
+     font tải xong làm hero cao thêm, sidebar mở, thanh cuộn xuất
+     hiện). Dùng ResizeObserver theo container → canvas luôn khớp
+     khung, camera aspect luôn đúng → nhà KHÔNG bị méo.
+
+     setSize(w, h, false): không để three tự set style width/height
+     (đè lên CSS width:100%;height:100%) → tránh letterbox.
+     --------------------------------------------------------------- */
+  function resizeCanvas(container) {
+    if (!state.renderer || !state.camera) return;
+    /* clientWidth/clientHeight: KHÔNG bị ảnh hưởng bởi transform của
+       hero timeline (scale/rotateY) → không dùng getBoundingClientRect. */
+    var w = container.clientWidth || container.offsetWidth || 600;
+    var h = container.clientHeight || container.offsetHeight || 600;
+    if (!w || !h) return;
+
+    state.camera.aspect = w / h;
+    state.camera.updateProjectionMatrix();
+    state.renderer.setSize(w, h, false);
+    if (state.composer) {
+      state.composer.setSize(w, h);
+      state.composer.setPixelRatio(state.dpr);
+    }
+  }
+
+  function setupResizeObserver(container) {
+    if (!window.ResizeObserver) return;
+    try {
+      var ro = new ResizeObserver(function () {
+        resizeCanvas(container);
+      });
+      ro.observe(container);
+      state.resizeObserver = ro;
+    } catch (e) {}
+  }
+
+  /* ---------------------------------------------------------------
+     ẢNH THẬT DÁN LÊN MẶT NHÀ
+     ---------------------------------------------------------------
+     Mô hình nhà procedural bị "lỗi/lệch" khi xem ở góc nghiêng.
+     Giải pháp: dán ảnh chụp thật của mô hình (do nhóm 9A6 tự làm)
+     lên 4 mặt tường dưới dạng panel phẳng nằm sát ngoài tường.
+
+     - Ảnh 4:3 map thẳng lên tường 5.2×3.1 (1.68:1) sẽ bị KÉO MÉO →
+       dùng fitTexture() để CẮT (crop) đúng tỉ lệ, không stretch.
+     - Ảnh đã có sẵn cửa & cửa sổ → ẩn geometry 3D ở các mặt có ảnh.
+     - Nếu ảnh lỗi tải → tường procedural vẫn hiện bình thường
+       (fallback an toàn).
+     ---------------------------------------------------------------- */
+  var PHOTO_FACES = [
+    /* face,       ảnh,          rộng, cao,  vị trí,            rotation */
+    { face: 'front', file: 'model-02.jpg', w: 5.2, h: 3.1, pos: [0, 1.55, 2.13], rot: 0 },
+    { face: 'back',  file: 'model-01.jpg', w: 5.2, h: 3.1, pos: [0, 1.55, -2.13], rot: Math.PI },
+    { face: 'right', file: 'model-03.jpg', w: 4.2, h: 3.1, pos: [2.63, 1.55, 0], rot: Math.PI / 2 },
+    { face: 'left',  file: 'model-04.jpg', w: 4.2, h: 3.1, pos: [-2.63, 1.55, 0], rot: -Math.PI / 2 },
+  ];
+
+  /* Cắt ảnh cho đúng tỉ lệ mục tiêu (crop, KHÔNG stretch) */
+  function fitTexture(tex, targetAspect, T) {
+    var img = tex.image;
+    if (!img || !img.width || !img.height) return;
+    var srcAspect = img.width / img.height;
+    if (srcAspect > targetAspect) {
+      /* ảnh rộng hơn → cắt bớt chiều ngang, giữ giữa */
+      var w = targetAspect / srcAspect;
+      tex.repeat.set(w, 1);
+      tex.offset.set((1 - w) / 2, 0);
+    } else {
+      /* ảnh cao hơn → cắt bớt chiều dọc, giữ giữa */
+      var h = srcAspect / targetAspect;
+      tex.repeat.set(1, h);
+      tex.offset.set(0, (1 - h) / 2);
+    }
+    var clamp = (T && T.ClampToEdgeWrapping) || 1001;
+    tex.wrapS = clamp;
+    tex.wrapT = clamp;
+    tex.needsUpdate = true;
+  }
+
+  function applyPhotoTextures(T) {
+    if (!state.group || !state.house) return;
+    if (state.photoGroup) {
+      state.house.remove(state.photoGroup);
+      state.photoGroup = null;
+    }
+
+    var group = new T.Group();
+    group.name = 'photo-panels';
+    state.house.add(group);
+    state.photoGroup = group;
+
+    var loader = new T.TextureLoader();
+    var panels = [];
+
+    PHOTO_FACES.forEach(function (cfg) {
+      var tex = loader.load(
+        'assets/img/' + cfg.file,
+        function (t) {
+          t.encoding = T.sRGBEncoding;
+          t.anisotropy = 4;
+          fitTexture(t, cfg.w / cfg.h, T);
+          t.needsUpdate = true;
+        },
+        undefined,
+        function () {
+          /* Ảnh lỗi → panel ẩn, tường procedural hiện bình thường */
+          if (panel) panel.visible = false;
+        }
+      );
+      tex.encoding = T.sRGBEncoding;
+      tex.anisotropy = 4;
+      fitTexture(tex, cfg.w / cfg.h, T);
+
+      var mat = new T.MeshStandardMaterial({
+        map: tex,
+        roughness: 0.78,
+        metalness: 0.02,
+        /* Ảnh chụp thật khá tối (trung bình ~87/255) → dùng emissiveMap
+           để mặt tường vẫn đọc được rõ dưới mọi góc sáng, kể cả ban đêm. */
+        color: 0xffffff,
+        emissive: 0xffffff,
+        emissiveMap: tex,
+        emissiveIntensity: 0.62,
+      });
+
+      var geo = new T.PlaneGeometry(cfg.w, cfg.h);
+      var panel = new T.Mesh(geo, mat);
+      panel.position.set(cfg.pos[0], cfg.pos[1], cfg.pos[2]);
+      panel.rotation.y = cfg.rot;
+      panel.receiveShadow = true;
+      panel.castShadow = false;
+      panel.userData.photoFace = cfg.face;
+      group.add(panel);
+
+      panels.push(panel);
+      state.textures.push(tex);
+    });
+
+    state.photoPanels = panels;
+
+    /* Ẩn cửa / cửa sổ 3D ở các mặt đã dán ảnh (ảnh đã có sẵn) */
+    var hidden = [];
+    PHOTO_FACES.forEach(function (cfg) {
+      (state.faceParts[cfg.face] || []).forEach(function (obj) {
+        if (obj) {
+          obj.visible = false;
+          hidden.push(obj);
+        }
+      });
+    });
+    state.photoHidden = hidden;
+
+    state.photoOn = true;
+  }
+
+  function setPhotoTextures(on) {
+    if (!state.photoGroup) return false;
+    state.photoOn = !!on;
+    state.photoGroup.visible = !!on;
+    (state.photoHidden || []).forEach(function (obj) {
+      if (obj) obj.visible = !on;
+    });
+    return true;
   }
 
   /* ---------------------------------------------------------------
@@ -1530,22 +1731,12 @@
       }
     };
 
-    // Resize
+    // Resize (fallback khi không có ResizeObserver)
     var resizeTimer;
     window.addEventListener('resize', function () {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(function () {
-        if (!state.renderer) return;
-        // clientWidth/clientHeight: không bị ảnh hưởng bởi transform của hero
-        var w2 = container.clientWidth || container.offsetWidth || 600;
-        var h2 = container.clientHeight || container.offsetHeight || 600;
-        state.camera.aspect = w2 / h2;
-        state.camera.updateProjectionMatrix();
-        state.renderer.setSize(w2, h2);
-        if (state.composer) {
-          state.composer.setSize(w2, h2);
-          state.composer.setPixelRatio(state.dpr);
-        }
+        resizeCanvas(container);
       }, 140);
     });
 
@@ -1610,7 +1801,8 @@
     if (state.group) {
       state.group.rotation.y = drag.rotY;
       state.group.rotation.x = drag.rotX;
-      state.group.position.y = Math.sin(t * 0.75) * 0.09;
+      /* Giảm chuyển động → bỏ float loop (nhấp nháy liên tục) */
+      state.group.position.y = state.reduced ? 0 : Math.sin(t * 0.75) * 0.09;
     }
 
     /* --- Camera zoom theo scroll --- */
@@ -1644,40 +1836,53 @@
         state.theme === 'night' ? 0.4 : 0.55;
     }
 
-    /* --- Cửa sổ phát sáng --- */
+    /* --- Cửa sổ phát sáng --- (giảm chuyển động → đặt hằng, không nhấp nháy) --- */
     if (state.setWindowGlow) {
-      var flicker = state.theme === 'night'
-        ? state.winEmissive + Math.sin(t * 0.8) * 0.12
-        : state.winEmissive + Math.sin(t * 0.8) * 0.05;
+      var flicker = state.reduced
+        ? state.winEmissive
+        : state.theme === 'night'
+          ? state.winEmissive + Math.sin(t * 0.8) * 0.12
+          : state.winEmissive + Math.sin(t * 0.8) * 0.05;
       state.setWindowGlow(flicker);
     }
 
     /* --- Đèn nhấp nháy --- */
     if (state.lights) {
       var neon = state.theme === 'night' ? 1.35 : 0.45;
-      state.lights.pl1.intensity = neon + Math.sin(t * 1.6) * 0.32;
-      state.lights.pl2.intensity = neon * 0.78 + Math.cos(t * 1.3) * 0.28;
-      state.lights.rim1.intensity =
-        (state.theme === 'night' ? 1.5 : 0.15) + Math.sin(t * 1.1) * 0.2;
-      state.lights.rim2.intensity =
-        (state.theme === 'night' ? 1.5 : 0.15) + Math.cos(t * 0.9) * 0.2;
+      if (state.reduced) {
+        state.lights.pl1.intensity = neon;
+        state.lights.pl2.intensity = neon * 0.78;
+        state.lights.rim1.intensity = state.theme === 'night' ? 1.5 : 0.15;
+        state.lights.rim2.intensity = state.theme === 'night' ? 1.5 : 0.15;
+      } else {
+        state.lights.pl1.intensity = neon + Math.sin(t * 1.6) * 0.32;
+        state.lights.pl2.intensity = neon * 0.78 + Math.cos(t * 1.3) * 0.28;
+        state.lights.rim1.intensity =
+          (state.theme === 'night' ? 1.5 : 0.15) + Math.sin(t * 1.1) * 0.2;
+        state.lights.rim2.intensity =
+          (state.theme === 'night' ? 1.5 : 0.15) + Math.cos(t * 0.9) * 0.2;
+      }
     }
 
     /* --- Cảm biến chớp --- */
     if (state.sensor) {
-      state.sensor.material.emissiveIntensity = 0.8 + Math.abs(Math.sin(t * 2.4)) * 1.6;
+      state.sensor.material.emissiveIntensity = state.reduced
+        ? 1.4
+        : 0.8 + Math.abs(Math.sin(t * 2.4)) * 1.6;
     }
 
     /* --- Đèn cửa --- */
     if (state.lamp) {
       var lampBase = state.lampBase !== undefined ? state.lampBase : 0.5;
       state.lamp.material.emissiveIntensity = state.lightsOn
-        ? lampBase * 1.6 + Math.sin(t * 2.2) * 0.3
+        ? (state.reduced ? lampBase * 1.6 : lampBase * 1.6 + Math.sin(t * 2.2) * 0.3)
         : 0;
     }
     if (state.lampLight) {
       var lb = state.lampBase !== undefined ? state.lampBase : 0.5;
-      state.lampLight.intensity = state.lightsOn ? lb + Math.sin(t * 2.2) * 0.12 : 0;
+      state.lampLight.intensity = state.lightsOn
+        ? (state.reduced ? lb : lb + Math.sin(t * 2.2) * 0.12)
+        : 0;
     }
 
     /* --- Render --- */
@@ -1793,6 +1998,8 @@
     '  spin on | off     — bật / tắt xoay tự động',
     '  zoom in | out | reset — phóng / thu camera',
     '  sensors on | off  — hiện / ẩn điểm cảm biến trong scene',
+    '  photo on | off    — bật / tắt lớp ảnh thật dán trên nhà',
+    '  photo front|side|back — xoay nhà về góc để soi ảnh đang dán',
     '  clear             — xoá màn hình console',
     '  close             — đóng console',
   ];
@@ -1805,7 +2012,32 @@
       '  Cảm biến: ' + (state.sensorsVisible ? 'HIỆN' : 'ẨN'),
       '  Ánh sáng: ' + (state.theme === 'night' ? 'NIGHT' : 'DAY'),
       '  Xoay tự động: ' + (state.spinOn ? 'BẬT' : 'TẮT'),
+      '  Ảnh thật: ' + (state.photoOn ? 'BẬT' : 'TẮT'),
     ];
+  }
+
+  /* Xoay nhà về góc tương ứng để soi lớp ảnh thật đang dán */
+  function facePhoto(face) {
+    var angles = {
+      front: -0.32,
+      back: Math.PI - 0.32,
+      right: Math.PI / 2 - 0.25,
+      left: -Math.PI / 2 + 0.25,
+    };
+    var a = angles[face];
+    if (a === undefined) return false;
+    drag.targetRotY = a;
+    drag.targetRotX = 0.14;
+    state.autoTour = false;
+    if (state.tourCancel) {
+      try { state.tourCancel(); } catch (e) {}
+      state.tourCancel = null;
+    }
+    if (state.tourTimer) {
+      window.clearTimeout(state.tourTimer);
+      state.tourTimer = null;
+    }
+    return true;
   }
 
   House3D.exec = function (raw) {
@@ -1922,6 +2154,33 @@
           return { ok: true, lines: ['✔ Điểm cảm biến: ẨN'] };
         }
         return { ok: false, lines: ['✖ Dùng: sensors on | sensors off'] };
+
+      case 'photo':
+      case 'anh':
+        if (arg === 'on') {
+          setPhotoTextures(true);
+          return { ok: true, lines: ['✔ Ảnh thật trên nhà: BẬT'] };
+        }
+        if (arg === 'off') {
+          setPhotoTextures(false);
+          return { ok: true, lines: ['✔ Ảnh thật trên nhà: TẮT (mô hình procedural)'] };
+        }
+        if (arg === 'front' || arg === 'truoc' || arg === 'mattruoc') {
+          if (!facePhoto('front')) return { ok: false, lines: ['✖ Không xoay được'] };
+          return { ok: true, lines: ['✔ Đã xoay nhà về MẶT TRƯỚC (model-02.jpg)'] };
+        }
+        if (arg === 'back' || arg === 'sau' || arg === 'matsau') {
+          if (!facePhoto('back')) return { ok: false, lines: ['✖ Không xoay được'] };
+          return { ok: true, lines: ['✔ Đã xoay nhà về MẶT SAU (model-01.jpg)'] };
+        }
+        if (arg === 'side' || arg === 'ben' || arg === 'matben') {
+          if (!facePhoto('right')) return { ok: false, lines: ['✖ Không xoay được'] };
+          return { ok: true, lines: ['✔ Đã xoay nhà về MẶT BÊN (model-03/04.jpg)'] };
+        }
+        return {
+          ok: false,
+          lines: ['✖ Dùng: photo on | photo off | photo front | photo side | photo back'],
+        };
 
       case 'status':
       case 'trangthai':

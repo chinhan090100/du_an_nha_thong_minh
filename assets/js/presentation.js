@@ -16,6 +16,11 @@
 
   var reduce = !!(window.Vendor && window.Vendor.reducedMotion);
   var isTouch = !!(window.Vendor && window.Vendor.isTouch);
+  /* Chuột thật hay chỉ màn hình cảm ứng? (laptop cảm ứng vẫn có chuột) */
+  var hasFinePointer =
+    window.Vendor && window.Vendor.hasFinePointer !== undefined
+      ? window.Vendor.hasFinePointer
+      : !isTouch;
 
   var st = {
     index: 0,
@@ -192,52 +197,84 @@
     prev.classList.remove('is-active');
     prev.classList.add('is-leaving');
     prev.setAttribute('aria-hidden', 'true');
-    gsap.to(prev, {
-      rotationY: -34 * dir,
-      rotationX: 4 * dir,
-      z: -560,
-      scale: 0.84,
-      opacity: 0,
-      filter: 'blur(14px)',
-      duration: DUR.out,
-      ease: 'power3.inOut',
-      onComplete: function () {
-        prev.classList.remove('is-leaving', 'is-exit-left', 'is-exit-right');
-        gsap.set(prev, {
-          filter: 'none',
-          clipPath: 'inset(0% 0% 0% 0%)',
-          visibility: 'hidden',
-          zIndex: 1,
-        });
-      },
-    });
+    if (reduce) {
+      /* Giảm chuyển động → chỉ fade, không xoay/lùi/blur */
+      gsap.to(prev, {
+        opacity: 0,
+        duration: 0.28,
+        ease: 'power2.inOut',
+        onComplete: function () {
+          prev.classList.remove('is-leaving', 'is-exit-left', 'is-exit-right');
+          gsap.set(prev, {
+            filter: 'none',
+            clipPath: 'inset(0% 0% 0% 0%)',
+            visibility: 'hidden',
+            zIndex: 1,
+          });
+        },
+      });
+    } else {
+      gsap.to(prev, {
+        rotationY: -34 * dir,
+        rotationX: 4 * dir,
+        z: -560,
+        scale: 0.84,
+        opacity: 0,
+        filter: 'blur(14px)',
+        duration: DUR.out,
+        ease: 'power3.inOut',
+        onComplete: function () {
+          prev.classList.remove('is-leaving', 'is-exit-left', 'is-exit-right');
+          gsap.set(prev, {
+            filter: 'none',
+            clipPath: 'inset(0% 0% 0% 0%)',
+            visibility: 'hidden',
+            zIndex: 1,
+          });
+        },
+      });
+    }
 
     // 3) Slide mới: shutter wipe + mờ từ xa
     next.classList.remove('is-exit-left', 'is-exit-right');
     next.setAttribute('aria-hidden', 'false');
     next.classList.add('is-active');
 
-    gsap.set(next, {
-      zIndex: 2,
-      opacity: 1,
-      visibility: 'visible',
-      rotationY: 12 * dir,
-      rotationX: -3 * dir,
-      z: -260,
-      scale: 0.9,
-      filter: 'blur(16px)',
-      clipPath: 'inset(0% 0% 100% 0%)',
-    });
-    gsap.to(next, {
-      rotationY: 0,
-      rotationX: 0,
-      z: 0,
-      scale: 1,
-      filter: 'blur(0px)',
-      clipPath: 'inset(0% 0% 0% 0%)',
-      duration: DUR.in,
-      ease: 'expo.out',
-    });
+    if (reduce) {
+      gsap.set(next, {
+        zIndex: 2,
+        opacity: 1,
+        visibility: 'visible',
+        rotationY: 0,
+        rotationX: 0,
+        z: 0,
+        scale: 1,
+        filter: 'none',
+        clipPath: 'inset(0% 0% 0% 0%)',
+      });
+    } else {
+      gsap.set(next, {
+        zIndex: 2,
+        opacity: 1,
+        visibility: 'visible',
+        rotationY: 12 * dir,
+        rotationX: -3 * dir,
+        z: -260,
+        scale: 0.9,
+        filter: 'blur(16px)',
+        clipPath: 'inset(0% 0% 100% 0%)',
+      });
+      gsap.to(next, {
+        rotationY: 0,
+        rotationX: 0,
+        z: 0,
+        scale: 1,
+        filter: 'blur(0px)',
+        clipPath: 'inset(0% 0% 0% 0%)',
+        duration: DUR.in,
+        ease: 'expo.out',
+      });
+    }
 
     // 4) Nội dung nổi lên theo tầng chiều sâu
     revealContent(next, DUR.in * 0.36);
@@ -245,9 +282,31 @@
     // 5) Tiêu đề mới "cuộn" vào — morph đầu ra
     morphIn(next, DUR.in * 0.34);
 
+    // 6) Hiệu ứng riêng theo slide (đếm số, ánh sáng loé bìa, Ken Burns)
+    slideEnterFx(next, DUR.in * 0.5);
+
     setTimeout(function () {
       st.busy = false;
     }, reduce ? 60 : DUR.in * 1000 + 40);
+  }
+
+  /* ---------------------------------------------------------------
+     HIỆU ỨNG KHI VÀO SLIDE
+     --------------------------------------------------------------- */
+  function slideEnterFx(slide, delay) {
+    if (!st.hasGsap || !slide) return;
+    var gsap = st.gsap;
+
+    /* Số liệu & thanh biểu đồ chỉ chạy khi vào slide (không chạy sẵn).
+       Vẫn chạy khi reduce vì đếm số là thông tin, không phải chuyển động lớn. */
+    animateStats(slide, reduce ? 0 : delay);
+
+    /* Ánh sáng loé trên tiêu đề bìa — bỏ qua khi giảm chuyển động */
+    if (!reduce && slide.querySelector('.p-cover__title')) {
+      gsap.delayedCall(delay + 0.15, function () {
+        playCoverGlare();
+      });
+    }
   }
 
   /* ---------------------------------------------------------------
@@ -303,12 +362,22 @@
   }
 
   function morphOut(slide) {
-    if (!st.hasGsap || reduce) return;
+    if (!st.hasGsap) return;
     var gsap = st.gsap;
     $$('[data-s]', slide).forEach(function (el) {
       if (!isMorphTarget(el)) return;
       var parts = splitMorph(el);
       if (!parts.length) return;
+      if (reduce) {
+        gsap.to(parts, {
+          opacity: 0,
+          duration: 0.24,
+          stagger: 0.02,
+          ease: 'power2.in',
+          overwrite: 'auto',
+        });
+        return;
+      }
       gsap.to(parts, {
         y: -46,
         opacity: 0,
@@ -323,12 +392,27 @@
   }
 
   function morphIn(slide, delay) {
-    if (!st.hasGsap || reduce) return;
+    if (!st.hasGsap) return;
     var gsap = st.gsap;
     $$('[data-s]', slide).forEach(function (el) {
       if (!isMorphTarget(el)) return;
       var parts = splitMorph(el);
       if (!parts.length) return;
+      if (reduce) {
+        gsap.fromTo(
+          parts,
+          { opacity: 0 },
+          {
+            opacity: 1,
+            duration: 0.4,
+            delay: delay,
+            stagger: 0.03,
+            ease: 'power2.out',
+            overwrite: 'auto',
+          }
+        );
+        return;
+      }
       gsap.fromTo(
         parts,
         { y: 72, opacity: 0, rotationX: -72, transformOrigin: '50% 100%' },
@@ -371,21 +455,27 @@
 
     sorted.forEach(function (el, i) {
       var d = depthOf(el);
-      var z = -190 * (1 - d);
-      var y = 46 + 34 * (1 - d);
-      var rotX = -11 * (1 - d);
-      var rotY = 6 * (1 - d);
+      var fromVars;
+      var toVars;
+
+      if (reduce) {
+        /* Giảm chuyển động → chỉ fade, không bay 3D */
+        fromVars = { opacity: 0 };
+        toVars = { opacity: 1 };
+      } else {
+        var z = -190 * (1 - d);
+        var y = 46 + 34 * (1 - d);
+        var rotX = -11 * (1 - d);
+        var rotY = 6 * (1 - d);
+        fromVars = { opacity: 0, y: y, z: z, rotationX: rotX, rotationY: rotY, scale: 0.965 };
+        toVars = { opacity: 1, y: 0, z: 0, rotationX: 0, rotationY: 0, scale: 1 };
+      }
 
       gsap.fromTo(
         el,
-        { opacity: 0, y: y, z: z, rotationX: rotX, rotationY: rotY, scale: 0.965 },
+        fromVars,
         {
-          opacity: 1,
-          y: 0,
-          z: 0,
-          rotationX: 0,
-          rotationY: 0,
-          scale: 1,
+          ...toVars,
           duration: DUR.reveal,
           delay: (delay || 0) + i * 0.055,
           ease: 'expo.out',
@@ -429,7 +519,8 @@
      PARALLAX CHUỘT
      --------------------------------------------------------------- */
   function bindParallax() {
-    if (reduce || isTouch || !st.hasGsap) return;
+    /* Parallax là chuyển động TỰ ĐỘNG theo scroll → tắt khi reduce. */
+    if (reduce || !hasFinePointer || !st.hasGsap) return;
     var stage = $('.p-stage');
     if (!stage) return;
 
@@ -481,7 +572,8 @@
   var TILT_SEL = '.p-card, .p-tl, .p-stat, .p-thumb';
 
   function bindTilt() {
-    if (reduce || isTouch || !st.hasGsap) return;
+    /* Tilt là tương tác hover chủ động → giữ cả khi reduce. */
+    if (!hasFinePointer || !st.hasGsap) return;
     var gsap = st.gsap;
 
     $$(TILT_SEL).forEach(function (el) {
@@ -522,11 +614,70 @@
   }
 
   /* ---------------------------------------------------------------
+     KEN BURNS — ảnh trong slide nhóm chuyển động chậm, sống động
+     --------------------------------------------------------------- */
+  var KEN_BURNS_SEL = '.p-mosaic__item img, .p-thumb img, .p-shot img';
+
+  function bindKenBurns() {
+    if (reduce || !st.hasGsap) return;
+    var gsap = st.gsap;
+    $$(KEN_BURNS_SEL).forEach(function (img, i) {
+      if (img.__kbBound) return;
+      img.__kbBound = true;
+      gsap.set(img, { scale: 1.02, transformOrigin: '50% 50%' });
+      gsap.to(img, {
+        scale: 1.13,
+        xPercent: i % 2 ? -2.5 : 2.5,
+        yPercent: i % 3 ? 1.8 : -1.8,
+        duration: 13 + i * 2.5,
+        ease: 'sine.inOut',
+        repeat: -1,
+        yoyo: true,
+        overwrite: false,
+      });
+    });
+  }
+
+  /* ---------------------------------------------------------------
+     SPECULAR GLARE — ánh sáng loé chạy qua tiêu đề bìa
+     --------------------------------------------------------------- */
+  function playCoverGlare() {
+    if (reduce || !st.hasGsap) return;
+    var gsap = st.gsap;
+    var title = $('.p-cover__title');
+    if (!title) return;
+
+    /* Điều khiển background-position của ::after bằng biến CSS */
+    gsap.fromTo(
+      title,
+      { '--glare-pos': '-30%', '--glare-opacity': 0 },
+      {
+        '--glare-pos': '130%',
+        '--glare-opacity': 1,
+        duration: 1.5,
+        ease: 'power2.inOut',
+        overwrite: 'auto',
+      }
+    );
+    gsap.to(
+      title,
+      {
+        '--glare-opacity': 0,
+        duration: 0.9,
+        delay: 0.9,
+        ease: 'power2.in',
+        overwrite: false,
+      }
+    );
+  }
+
+  /* ---------------------------------------------------------------
      SỐ LIỆU & THANH BIỂU ĐỒ (GSAP)
      --------------------------------------------------------------- */
-  function animateStats(slide) {
+  function animateStats(slide, delay) {
     if (!st.hasGsap) return;
     var gsap = st.gsap;
+    var d0 = delay || 0;
 
     $$('.p-bar__fill', slide).forEach(function (el, i) {
       var raw = el.getAttribute('style') || '';
@@ -537,7 +688,7 @@
         {
           width: target + '%',
           duration: 1.35,
-          delay: 0.25 + i * 0.1,
+          delay: d0 + 0.25 + i * 0.1,
           ease: 'expo.out',
           overwrite: 'auto',
         }
@@ -546,16 +697,20 @@
 
     $$('.p-stat__num', slide).forEach(function (el, i) {
       var raw = (el.textContent || '').trim();
-      var m = /^([\d.]+)(\D*)$/.exec(raw);
+      /* Chỉ lấy PHẦN SỐ ở đầu để đếm, giữ nguyên phần hậu tố.
+         "30%" → 30 + "%" | "2s" → 2 + "s" | "24/7" → 24 + "/7" | "8+" → 8 + "+" */
+      var m = /^(\d+(?:[.,]\d+)?)([\s\S]*)$/.exec(raw);
       if (!m) return;
-      var to = parseFloat(m[1]);
+      var to = parseFloat(m[1].replace(',', '.'));
       var suffix = m[2] || '';
+      if (!isFinite(to)) return;
       var obj = { v: 0 };
       gsap.to(obj, {
         v: to,
         duration: 1.5,
-        delay: 0.3 + i * 0.12,
+        delay: d0 + 0.3 + i * 0.12,
         ease: 'power2.out',
+        overwrite: 'auto',
         onUpdate: function () {
           var val = to % 1 ? obj.v.toFixed(1) : String(Math.round(obj.v));
           el.textContent = val + suffix;
@@ -946,7 +1101,14 @@
     st.started = true;
 
     st.gsap = window.gsap || null;
-    st.hasGsap = !!(st.gsap && !reduce);
+    /* ---------------------------------------------------------------
+       reduced-motion KHÔNG được tắt GSAP hoàn toàn.
+       Nếu tắt, toàn bộ deck rơi về fallback CSS: không morph, không
+       depth reveal, không đếm số → "slide phèn" (đúng triệu chứng
+       user báo). Nay GSAP vẫn chạy nhưng các nhánh có `reduce`
+       sẽ chỉ dùng fade, không translate/rotate/scale lớn.
+       --------------------------------------------------------------- */
+    st.hasGsap = !!st.gsap;
 
     if (st.hasGsap) {
       document.documentElement.classList.add('has-gsap');
@@ -962,7 +1124,9 @@
       bindFloats();
       bindParallax();
       bindTilt();
-      animateStats(st.slides[0]);
+      bindKenBurns();
+      /* Slide đầu tiên: hiệu ứng chạy ngay khi deck mở */
+      slideEnterFx(st.slides[0], 0.15);
     }
   }
 

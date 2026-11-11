@@ -39,9 +39,30 @@
     window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* Ghi đè chế độ chuyển động đã được đặt sẵn bởi inline script trong
+     <head> (xem index.html / presentation.html) — chỉ ghi nhận ở đây. */
+  V.motionOverride = window.__motionOverride || null;
+
   V.isTouch =
     'ontouchstart' in window ||
     (window.navigator && window.navigator.maxTouchPoints > 0);
+
+  /* ---------------------------------------------------------------
+     hasFinePointer: user đang dùng CHUỘT hay chỉ màn hình cảm ứng?
+
+     V.isTouch = true trên laptop Windows có màn hình cảm ứng, dù
+     đang cầm chuột. Gate hiệu ứng hover/chuột theo isTouch sẽ
+     giết sạch hiệu ứng trên Chrome PC. Media query pointer mới là
+     tiêu chí đúng cho hiệu ứng chuột.
+     --------------------------------------------------------------- */
+  var finePointerQuery =
+    window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)');
+  V.hasFinePointer = finePointerQuery ? finePointerQuery.matches : !V.isTouch;
+  if (finePointerQuery && finePointerQuery.addEventListener) {
+    finePointerQuery.addEventListener('change', function (e) {
+      V.hasFinePointer = e.matches;
+    });
+  }
 
   V.lowPower = V.isTouch || (navigator.hardwareConcurrency || 8) <= 2;
 

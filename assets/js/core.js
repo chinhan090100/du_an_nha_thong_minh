@@ -11,8 +11,27 @@
     'ontouchstart' in window ||
     (navigator.maxTouchPoints || 0) > 0;
 
+  /* ---------------------------------------------------------------
+     PHÂN BIỆT "CÓ CHUỘT" vs "CÓ MÀN CẢM ỨNG"
+
+     BUG NGUYÊN NHÂN: laptop Windows có màn hình cảm ứng có
+     navigator.maxTouchPoints = 10 → isTouch = true NGAY CẢ KHI
+     người dùng đang cầm chuột. Kết quả mọi hiệu ứng hover/chuột
+     bị tắt im lặng (tilt, magnetic, cursor, glow con trỏ, pin cuộn
+     ngang) → Chrome PC "chết" hiệu ứng, trong khi Chrome mobile
+     vẫn hiện vì animation scroll không bị gate.
+
+     Sửa: dùng media query pointer để biết con trỏ CHÍNH XÁC có
+     phải chuột không. hasFinePointer = true trên laptop cảm ứng
+     (vẫn có chuột), false trên tablet/mobile thuần.
+     --------------------------------------------------------------- */
+  var finePointerQuery =
+    window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)');
+  var hasFinePointer = finePointerQuery ? finePointerQuery.matches : !isTouch;
+
   Core.reduce = reduce;
   Core.isTouch = isTouch;
+  Core.hasFinePointer = hasFinePointer;
   Core.clamp = function (v, a, b) { return Math.min(b, Math.max(a, v)); };
   Core.lerp = function (a, b, t) { return a + (b - a) * t; };
   Core.$ = function (s, c) { return (c || document).querySelector(s); };
@@ -73,7 +92,9 @@
      2. CUSTOM CURSOR
      --------------------------------------------------------------- */
   Core.initCursor = function () {
-    if (isTouch || reduce) return;
+    /* Con trỏ tùy biến là phản hồi trực tiếp cho chuột → giữ khi reduce
+       (chỉ tắt các chuyển động TỰ ĐỘNG). */
+    if (!Core.hasFinePointer) return;
     var dot = Core.$('.cursor-dot');
     var ring = Core.$('.cursor-ring');
     if (!dot || !ring) return;
@@ -217,7 +238,8 @@
      5. MAGNETIC BUTTONS
      --------------------------------------------------------------- */
   Core.initMagnetic = function () {
-    if (isTouch || reduce) return;
+    /* Magnetic button là phản hồi hover chủ động → giữ khi reduce. */
+    if (!Core.hasFinePointer) return;
     var els = Core.$$('[data-magnetic]');
     els.forEach(function (el) {
       var strength = parseFloat(el.getAttribute('data-magnetic')) || 0.32;
@@ -339,6 +361,13 @@
     Core.initReveal();
     Core.initMagnetic();
   };
+
+  /* Cập nhật hasFinePointer khi user cắm/rút chuột, tablet với PC */
+  if (finePointerQuery && finePointerQuery.addEventListener) {
+    finePointerQuery.addEventListener('change', function (e) {
+      Core.hasFinePointer = e.matches;
+    });
+  }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', Core.boot);
