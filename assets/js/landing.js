@@ -25,7 +25,16 @@
      --------------------------------------------------------------- */
   function initParticles() {
     var canvas = $('#particle-canvas');
-    if (!canvas || reduce) return;
+    if (!canvas || reduce) { if (canvas) canvas.style.display = 'none'; return; }
+    var isLow = false;
+    try {
+      isLow = document.documentElement.classList.contains('low-power') ||
+        (navigator.deviceMemory || 8) <= 4 ||
+        (navigator.hardwareConcurrency || 8) <= 4 ||
+        ((navigator.connection && navigator.connection.saveData) === true);
+    } catch (e) {}
+    /* Máy yếu / tiết kiệm pin: tắt hẳn hạt nền cho mượt */
+    if (isLow) { canvas.style.display = 'none'; return; }
 
     var ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -35,7 +44,18 @@
     var mouse = { x: -9999, y: -9999 };
     var raf = null;
     var running = false;
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var visible = true;
+    var lastFrame = 0;
+    var dpr = Math.min(window.devicePixelRatio || 1, 1.25);
+
+    /* Tắt canvas khi khuất khỏi màn hình (cuộn qua hero) để khỏi tốn GPU */
+    try {
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          visible = entries[0] ? entries[0].isIntersecting : true;
+        }, { threshold: 0 }).observe(canvas);
+      }
+    } catch (e) {}
 
     function palette() {
       var dark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -47,8 +67,8 @@
 
     function count() {
       var area = W * H;
-      var base = Math.round(area / 22000);
-      return Math.max(26, Math.min(isTouch ? 46 : 92, base));
+      var base = Math.round(area / 34000);
+      return Math.max(20, Math.min(isTouch ? 32 : 56, base));
     }
 
     function resize() {
@@ -76,9 +96,13 @@
       }
     }
 
-    function frame() {
+    function frame(now) {
       if (!running) return;
+      /* Khóa 30fps: canvas nền không cần 60fps, giảm nửa tải GPU */
+      if (now - lastFrame < 33) { raf = requestAnimationFrame(frame); return; }
+      lastFrame = now;
       raf = requestAnimationFrame(frame);
+      if (!visible) return;
 
       ctx.clearRect(0, 0, W, H);
       var linkDist = hasFinePointer ? 132 : 96;
@@ -317,16 +341,21 @@
 
     var fpsSamples = [];
     var last = performance.now();
-    (function tick(now) {
+    var ticking = false;
+    /* Chỉ đo FPS khi panel mở — trước đây tick chạy vĩnh viễn kể cả
+       khi đóng, tốn 1 rAF/frame vô ích (máy yếu mất ~2-3fps chỉ vì đo). */
+    function tick(now) {
+      ticking = true;
+      if (!panel.classList.contains('is-open')) { ticking = false; last = now; return; }
       var dt = (now - last) / 1000;
       last = now;
       if (dt > 0) {
         fpsSamples.push(1 / dt);
         if (fpsSamples.length > 60) fpsSamples.shift();
       }
-      if (panel.classList.contains('is-open')) render();
+      render();
       requestAnimationFrame(tick);
-    })(performance.now());
+    }
 
     function row(label, value, ok) {
       var cls = ok === undefined ? '' : ok ? 'ok' : 'bad';
@@ -379,7 +408,7 @@
       var open = force !== undefined ? force : !panel.classList.contains('is-open');
       panel.classList.toggle('is-open', open);
       panel.setAttribute('aria-hidden', open ? 'false' : 'true');
-      if (open) render();
+      if (open) { render(); if (!ticking) requestAnimationFrame(tick); }
     }
 
     panel.querySelector('.diag-panel__x').addEventListener('click', function () {

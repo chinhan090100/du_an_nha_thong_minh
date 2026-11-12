@@ -30,14 +30,15 @@
     gsap: null,
     hasGsap: false,
     started: false,
+    fxDone: {},
   };
 
   var DUR = {
-    out: 0.58,
-    in: 0.8,
-    morphOut: 0.4,
-    morphIn: 0.68,
-    reveal: 0.7,
+    out: 0.62,
+    in: 0.92,
+    morphOut: 0.42,
+    morphIn: 0.78,
+    reveal: 0.8,
   };
 
   /* ---------------------------------------------------------------
@@ -73,6 +74,14 @@
     bindHash();
 
     var startIdx = hashIndex();
+    /* Tách từ tiêu đề NGAY từ đầu để khe margin có hiệu lực trước
+       cả khi morph chưa chạy (slide đầu tiên mở đã đủ khe, không
+       còn cảnh "trongmô hình" ở lần paint đầu). */
+    try {
+      $$('[data-s]').forEach(function (el) {
+        if (isMorphTarget(el)) splitMorph(el);
+      });
+    } catch (e) {}
     goTo(startIdx, true);
   };
 
@@ -214,15 +223,8 @@
         },
       });
     } else {
-      gsap.to(prev, {
-        rotationY: -34 * dir,
-        rotationX: 4 * dir,
-        z: -560,
-        scale: 0.84,
-        opacity: 0,
-        filter: 'blur(14px)',
-        duration: DUR.out,
-        ease: 'power3.inOut',
+      /* Cinematic out: xoay lùi + mờ + tối dần + màn chéo quét đi */
+      var outTl = gsap.timeline({
         onComplete: function () {
           prev.classList.remove('is-leaving', 'is-exit-left', 'is-exit-right');
           gsap.set(prev, {
@@ -233,6 +235,23 @@
           });
         },
       });
+      outTl.to(prev, {
+        rotationY: -38 * dir,
+        rotationX: 5 * dir,
+        z: -620,
+        x: -70 * dir,
+        scale: 0.82,
+        opacity: 0,
+        filter: 'blur(16px) brightness(0.6)',
+        duration: DUR.out,
+        ease: 'power3.inOut',
+        overwrite: 'auto',
+      }, 0);
+      outTl.to(
+        $('.p-slide__inner', prev) || {},
+        { y: -34, scale: 0.96, opacity: 0, duration: DUR.out * 0.9, ease: 'power3.in' },
+        0
+      );
     }
 
     // 3) Slide mới: shutter wipe + mờ từ xa
@@ -257,23 +276,44 @@
         zIndex: 2,
         opacity: 1,
         visibility: 'visible',
-        rotationY: 12 * dir,
-        rotationX: -3 * dir,
-        z: -260,
-        scale: 0.9,
-        filter: 'blur(16px)',
+        rotationY: 16 * dir,
+        rotationX: -4 * dir,
+        z: -320,
+        x: 90 * dir,
+        scale: 0.88,
+        filter: 'blur(18px) brightness(1.5)',
         clipPath: 'inset(0% 0% 100% 0%)',
       });
-      gsap.to(next, {
+      var inTl = gsap.timeline();
+      inTl.to(next, {
+        rotationY: -2.5 * dir,
+        rotationX: 1,
+        z: 60,
+        x: -12 * dir,
+        scale: 1.02,
+        filter: 'blur(0px) brightness(1.12)',
+        clipPath: 'inset(0% 0% 0% 0%)',
+        duration: DUR.in * 0.62,
+        ease: 'expo.out',
+      }, 0);
+      inTl.to(next, {
         rotationY: 0,
         rotationX: 0,
         z: 0,
+        x: 0,
         scale: 1,
-        filter: 'blur(0px)',
-        clipPath: 'inset(0% 0% 0% 0%)',
-        duration: DUR.in,
-        ease: 'expo.out',
-      });
+        filter: 'blur(0px) brightness(1)',
+        duration: DUR.in * 0.48,
+        ease: 'elastic.out(1, 0.62)',
+      }, DUR.in * 0.6);
+      /* Màn chéo ánh sáng quét qua khi slide mới vào */
+      var inner = $('.p-slide__inner', next);
+      if (inner) {
+        gsap.fromTo(inner,
+          { '--sweep': '-130%' },
+          { '--sweep': '230%', duration: DUR.in * 1.15, ease: 'expo.out', overwrite: 'auto' }
+        );
+      }
     }
 
     // 4) Nội dung nổi lên theo tầng chiều sâu
@@ -307,6 +347,313 @@
         playCoverGlare();
       });
     }
+
+    /* Hiệu ứng riêng từng slide: thẻ bật, bảng đổ sóng, timeline vẽ,
+       luồng xung, mosaic zoom — tạo cảm giác mỗi slide là một màn mới. */
+    fxSlideDetails(slide, reduce ? 0 : delay);
+
+    /* Nền aurora đổi sắc theo slide + thanh tiến trình phát sáng. */
+    fxBgShift(st.index);
+    fxProgressPulse();
+  }
+
+  /* ---------------------------------------------------------------
+     CHI TIẾT THEO SLIDE — bật thẻ, đổ sóng, vẽ timeline, xung luồng
+     + wave tiêu đề, glow số liệu, shimmer thanh bar, zoom mosaic
+     --------------------------------------------------------------- */
+  function fxSlideDetails(slide, delay) {
+    if (!st.hasGsap || !slide) return;
+    if (reduce) {
+      /* motion=off: vẫn cho số liệu/bar hiện đúng giá trị cuối,
+         không để kẹt opacity 0. */
+      var fills = $$('.p-bar__fill', slide);
+      fills.forEach(function (el) {
+        var m = /--w:\s*([\d.]+)%/.exec(el.getAttribute('style') || '');
+        el.style.width = (m ? m[1] : 50) + '%';
+      });
+      var nums = $$('.p-stat__num', slide);
+      nums.forEach(function (el) {
+        if (el.__finalText) el.textContent = el.__finalText;
+      });
+      gsap.set(
+        $$('[data-s], .p-card, .p-tl, .p-stat, .p-table tbody tr, .p-list li, .p-badge, .p-mosaic__item, .p-flow__node', slide),
+        { clearProps: 'all', opacity: 1, visibility: 'visible' }
+      );
+      return;
+    }
+    var gsap = st.gsap;
+    var d0 = delay || 0;
+
+    /* 0) Tiêu đề morph: sóng chữ nảy từng từ sau khi vào */
+    var morphUnits = [];
+    $$('[data-s]', slide).forEach(function (el) {
+      if (!isMorphTarget(el)) return;
+      morphUnits = morphUnits.concat(splitMorph(el));
+    });
+    if (morphUnits.length) {
+      gsap.fromTo(
+        morphUnits,
+        { y: 0 },
+        {
+          y: -9,
+          duration: 0.34,
+          delay: d0 + 0.55,
+          stagger: { each: 0.045, yoyo: true, repeat: 1 },
+          ease: 'sine.inOut',
+          overwrite: 'auto',
+          clearProps: 'transform',
+        }
+      );
+    }
+
+    /* Thẻ / số liệu / timeline item: nảy lên có đàn hồi */
+    var pops = $$('.p-card, .p-tl, .p-stat, .p-mosaic__item, .p-flow__node', slide);
+    if (pops.length) {
+      gsap.fromTo(
+        pops,
+        { y: 44, scale: 0.9, opacity: 0, rotationX: -16, rotationY: 6 },
+        {
+          y: 0,
+          scale: 1,
+          opacity: 1,
+          rotationX: 0,
+          rotationY: 0,
+          duration: 0.9,
+          delay: d0 + 0.1,
+          stagger: { each: 0.06, from: 'start' },
+          ease: 'back.out(1.6)',
+          overwrite: 'auto',
+          clearProps: 'transform',
+        }
+      );
+    }
+
+    /* Hàng bảng / mục danh sách: đổ sóng từ trái qua + highlight dòng */
+    var rows = $$('.p-table tbody tr, .p-list li, .p-bars .p-bar__row, .p-bars .p-bar', slide);
+    if (rows.length) {
+      gsap.fromTo(
+        rows,
+        { x: -44, opacity: 0 },
+        {
+          x: 0,
+          opacity: 1,
+          duration: 0.65,
+          delay: d0 + 0.22,
+          stagger: 0.07,
+          ease: 'expo.out',
+          overwrite: 'auto',
+          clearProps: 'transform',
+        }
+      );
+      /* Dòng đầu bảng sáng lên rồi dịu xuống để mắt biết nhìn đâu */
+      var firstRow = rows[0];
+      if (firstRow) {
+        gsap.fromTo(
+          firstRow,
+          { filter: 'brightness(1.8)' },
+          { filter: 'brightness(1)', duration: 1.1, delay: d0 + 0.5, ease: 'power2.out', overwrite: 'auto' }
+        );
+      }
+    }
+
+    /* Huy hiệu / badge: lóe sáng rồi ổn định */
+    var badges = $$('.p-badge, .p-cover__badge, .p-eyebrow', slide);
+    if (badges.length) {
+      gsap.fromTo(
+        badges,
+        { scale: 0.75, opacity: 0, rotation: -4 },
+        {
+          scale: 1,
+          opacity: 1,
+          rotation: 0,
+          duration: 0.65,
+          delay: d0 + 0.05,
+          stagger: 0.05,
+          ease: 'back.out(2.2)',
+          overwrite: 'auto',
+          clearProps: 'transform',
+        }
+      );
+    }
+
+    /* Mũi tên luồng kiến trúc: xung sáng chạy qua */
+    var arrows = $$('.p-flow__arrow svg', slide);
+    if (arrows.length) {
+      gsap.fromTo(
+        arrows,
+        { x: -10, opacity: 0.3, scale: 0.85 },
+        {
+          x: 6,
+          opacity: 1,
+          scale: 1.12,
+          duration: 0.55,
+          delay: d0 + 0.35,
+          stagger: 0.12,
+          ease: 'expo.out',
+          yoyo: true,
+          repeat: 1,
+          overwrite: 'auto',
+          clearProps: 'transform',
+        }
+      );
+    }
+
+    /* Mosaic ảnh: zoom + xoay nhẹ từng ô */
+    var shots = $$('.p-mosaic__item img, .p-thumb img, .p-shot img', slide);
+    if (shots.length) {
+      gsap.fromTo(
+        shots,
+        { scale: 1.18, rotation: 1.5, opacity: 0.4 },
+        {
+          scale: 1.05,
+          rotation: 0,
+          opacity: 1,
+          duration: 1.2,
+          delay: d0 + 0.15,
+          stagger: 0.08,
+          ease: 'expo.out',
+          overwrite: 'auto',
+          clearProps: 'transform',
+        }
+      );
+    }
+
+    /* Thống kê số: phát sáng khi đếm xong */
+    var statNums = $$('.p-stat__num', slide);
+    if (statNums.length) {
+      gsap.fromTo(
+        statNums,
+        { scale: 0.7, opacity: 0 },
+        {
+          scale: 1,
+          opacity: 1,
+          duration: 0.7,
+          delay: d0 + 0.3,
+          stagger: 0.09,
+          ease: 'back.out(1.9)',
+          overwrite: 'auto',
+          clearProps: 'transform',
+          onComplete: function () {
+            statNums.forEach(function (el) { el.style.opacity = '1'; });
+          },
+        }
+      );
+    }
+
+    /* Thanh bar: shimmer sáng chạy qua sau khi đổ đầy */
+    var barFills = $$('.p-bar__fill', slide);
+    if (barFills.length) {
+      gsap.fromTo(
+        barFills,
+        { filter: 'brightness(1)' },
+        {
+          filter: 'brightness(1.65)',
+          duration: 0.5,
+          delay: d0 + 1.15,
+          stagger: 0.09,
+          yoyo: true,
+          repeat: 1,
+          ease: 'sine.inOut',
+          overwrite: 'auto',
+        }
+      );
+    }
+
+    /* Slide bìa: tiêu đề sóng chữ + meta trượt lên */
+    if (slide.querySelector('.p-cover__title')) {
+      var coverBits = $$('.p-cover__meta span, .p-cover__hint, .p-cover__sub', slide);
+      if (coverBits.length) {
+        gsap.fromTo(
+          coverBits,
+          { y: 26, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.7,
+            delay: d0 + 0.3,
+            stagger: 0.08,
+            ease: 'expo.out',
+            overwrite: 'auto',
+            clearProps: 'transform',
+          }
+        );
+      }
+    }
+
+    /* Slide kết luận: nút CTA đập nhẹ thu hút bấm */
+    var actions = $$('.p-actions .p-btn', slide);
+    if (actions.length) {
+      gsap.fromTo(
+        actions,
+        { y: 22, scale: 0.9, opacity: 0 },
+        {
+          y: 0,
+          scale: 1,
+          opacity: 1,
+          duration: 0.7,
+          delay: d0 + 0.4,
+          stagger: 0.09,
+          ease: 'back.out(1.8)',
+          overwrite: 'auto',
+          clearProps: 'transform',
+        }
+      );
+    }
+  }
+
+  /* Nền aurora đổi sắc nhẹ mỗi slide để không gian luôn chuyển động. */
+  function fxBgShift(idx) {
+    if (reduce || !st.hasGsap) return;
+    var grad = $('.p-bg__grad');
+    var grid = $('.p-bg__grid');
+    if (!grad && !grid) return;
+    var t = (idx || 0) % 4;
+    var hue = [0, 28, -24, 14][t] || 0;
+    if (grad) {
+      st.gsap.to(grad, {
+        filter: 'hue-rotate(' + hue + 'deg) saturate(1.12)',
+        duration: 1.1,
+        ease: 'power2.out',
+        overwrite: 'auto',
+      });
+    }
+    if (grid) {
+      st.gsap.to(grid, {
+        x: (t - 1.5) * 14,
+        y: (t % 2) * 10,
+        duration: 1.2,
+        ease: 'power2.out',
+        overwrite: 'auto',
+      });
+    }
+  }
+
+  /* Thanh tiến trình + vòng tròn phát sáng mỗi lần chuyển slide. */
+  function fxProgressPulse() {
+    if (!st.hasGsap) return;
+    var bar = $('.p-progress');
+    var ring = $('.p-ring');
+    if (bar && !reduce) {
+      st.gsap.fromTo(
+        bar,
+        { filter: 'brightness(1.9)' },
+        { filter: 'brightness(1)', duration: 0.9, ease: 'power2.out', overwrite: 'auto' }
+      );
+    }
+    if (ring) {
+      st.gsap.fromTo(
+        ring,
+        { scale: 1 },
+        {
+          scale: reduce ? 1 : 1.14,
+          duration: reduce ? 0.2 : 0.34,
+          yoyo: true,
+          repeat: 1,
+          ease: 'power2.out',
+          overwrite: 'auto',
+        }
+      );
+    }
   }
 
   /* ---------------------------------------------------------------
@@ -326,7 +673,9 @@
     return el.matches(MORPH_SEL);
   }
 
-  /* Tách phần tử thành các đơn vị có thể animate riêng */
+  /* Tách phần tử thành các đơn vị có thể animate riêng.
+       Giữ khoảng trắng THẬT (text-node ' ') giữa các từ để không bao giờ
+       dính chữ — kể cả trước/sau cụm gradient .p-grad. */
   function splitMorph(el) {
     if (el.__morphParts) return el.__morphParts;
 
@@ -342,16 +691,21 @@
     nodes.forEach(function (node) {
       if (node.nodeType === 3) {
         var text = node.textContent;
-        if (!text.trim()) {
-          el.removeChild(node);
-          return;
-        }
-        var span = document.createElement('span');
-        span.className = 'p-morph-unit';
-        span.textContent = text;
-        el.replaceChild(span, node);
-        parts.push(span);
+        if (!text.trim()) return; /* bỏ node chỉ toàn xuống dòng/thụt lề */
+        var frag = document.createDocumentFragment();
+        var tokens = text.split(/(\s+)/);
+        tokens.forEach(function (tok) {
+          if (!tok) return;
+          if (/^\s+$/.test(tok)) { frag.appendChild(document.createTextNode(' ')); return; }
+          var span = document.createElement('span');
+          span.className = 'p-morph-unit';
+          span.textContent = tok;
+          frag.appendChild(span);
+          parts.push(span);
+        });
+        el.replaceChild(frag, node);
       } else if (node.nodeType === 1) {
+        /* Phần tử gradient giữ nguyên để không hỏng background-clip:text. */
         node.classList.add('p-morph-unit');
         parts.push(node);
       }
@@ -701,6 +1055,8 @@
          "30%" → 30 + "%" | "2s" → 2 + "s" | "24/7" → 24 + "/7" | "8+" → 8 + "+" */
       var m = /^(\d+(?:[.,]\d+)?)([\s\S]*)$/.exec(raw);
       if (!m) return;
+      /* Giữ lại text gốc để nhánh motion=off khôi phục khi cần */
+      if (!el.__finalText) el.__finalText = raw;
       var to = parseFloat(m[1].replace(',', '.'));
       var suffix = m[2] || '';
       if (!isFinite(to)) return;
@@ -1026,21 +1382,38 @@
      --------------------------------------------------------------- */
   function initParticles() {
     var canvas = $('#p-canvas');
-    if (!canvas || reduce) return;
+    if (!canvas || reduce) { if (canvas) canvas.style.display = 'none'; return; }
+    /* Máy yếu (RAM<=4GB / CPU<=4 nhân / tiết kiệm data): tắt hẳn */
+    try {
+      var low = document.documentElement.classList.contains('low-power') ||
+        (navigator.deviceMemory || 8) <= 4 ||
+        (navigator.hardwareConcurrency || 8) <= 4 ||
+        ((navigator.connection && navigator.connection.saveData) === true);
+      if (low) { canvas.style.display = 'none'; return; }
+    } catch (e) {}
     var ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     var pts = [];
     var W = 0, H = 0;
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var dpr = Math.min(window.devicePixelRatio || 1, 1.25);
     var raf = null;
+    var lastFrame = 0;
+    var visible = true;
+    try {
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          visible = entries[0] ? entries[0].isIntersecting : true;
+        }, { threshold: 0 }).observe(canvas);
+      }
+    } catch (e) {}
 
     function resize() {
       var r = canvas.getBoundingClientRect();
       W = r.width; H = r.height;
       canvas.width = W * dpr; canvas.height = H * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      var n = Math.max(24, Math.min(70, Math.round((W * H) / 26000)));
+      var n = Math.max(18, Math.min(44, Math.round((W * H) / 34000)));
       pts = [];
       for (var i = 0; i < n; i++) {
         pts.push({
@@ -1053,8 +1426,12 @@
       }
     }
 
-    function frame() {
+    function frame(now) {
+      /* Khóa 30fps + bỏ qua khi khuất — canvas nền không cần 60fps */
+      if (now - lastFrame < 33) { raf = requestAnimationFrame(frame); return; }
+      lastFrame = now;
       raf = requestAnimationFrame(frame);
+      if (!visible) return;
       ctx.clearRect(0, 0, W, H);
       for (var i = 0; i < pts.length; i++) {
         var p = pts[i];

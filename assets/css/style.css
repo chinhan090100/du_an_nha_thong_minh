@@ -502,7 +502,10 @@ h4 {
   inset: -20%;
   z-index: -1;
   pointer-events: none;
-  filter: blur(90px);
+  /* Bỏ filter: blur(90px) — blur toàn vùng 140vw ép GPU repaint mỗi frame
+     khi 3 blob animate transform (nguyên nhân lag chính). Các blob đã là
+     radial-gradient tan dần (transparent 68%) nên vẫn mềm mà không cần blur. */
+  filter: none;
   opacity: 0.5;
 }
 
@@ -888,10 +891,22 @@ html[data-theme='dark'] .theme-toggle .sun { display: none; }
 
 .hero__grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-  gap: clamp(2rem, 5vw, 4.5rem);
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(2rem, 5vw, 3rem);
   align-items: center;
+  justify-items: center;
   width: 100%;
+  max-width: 880px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.hero__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 760px;
+  margin-inline: auto;
 }
 
 .hero__badge {
@@ -941,6 +956,35 @@ html[data-theme='dark'] .theme-toggle .sun { display: none; }
   transform-origin: left bottom;
 }
 
+/* Khe từ do khoảng trắng thật (text-node ' ') mà JS chèn giữa các
+   .word — CSS không cộng thêm margin để tránh gấp đôi khe. */
+.hero__title .word + .word,
+.hero__title .word--split + .word--split {
+  margin-left: 0;
+}
+
+/* FAILSAFE motion=off: hero luôn hiện dù GSAP/timeline kẹt.
+   Quyền ưu tiên cao nhất để thắng mọi tween .from() còn sót. */
+html.no-motion .hero__badge,
+html.no-motion .hero__title,
+html.no-motion .hero__title .line,
+html.no-motion .hero__title__inner,
+html.no-motion .hero__title .word,
+html.no-motion .hero__subtitle,
+html.no-motion .hero__subtitle .scramble,
+html.no-motion .hero__cta,
+html.no-motion .hero__cta > *,
+html.no-motion .hero__meta,
+html.no-motion .hero__meta-item,
+html.no-motion .hero__showcase,
+html.no-motion .hero__card,
+html.no-motion .hero__chip,
+html.no-motion .scroll-hint {
+  opacity: 1 !important;
+  transform: none !important;
+  visibility: visible !important;
+}
+
 /* Khi có GSAP: cho phép GSAP điều khiển hiển thị */
 html.has-motion .hero__title__inner {
   transform-style: preserve-3d;
@@ -976,6 +1020,7 @@ html.has-motion .hero__title__inner {
 .hero__cta {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.9rem;
   margin-bottom: 2.8rem;
 }
@@ -983,6 +1028,7 @@ html.has-motion .hero__title__inner {
 .hero__meta {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 1.6rem 2.4rem;
   padding-top: 1.8rem;
   border-top: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
@@ -2485,6 +2531,20 @@ html.has-motion [data-reveal] {
      Chỉ tắt hạt particle nền (chuyển động liên tục). */
   .bg-canvas { display: none; }
 }
+
+/* --------------------------------------------------------------------------
+   23b. MÁY YẾU — tắt hiệu ứng ngầm ngốn GPU (giữ hiệu ứng chính)
+   Ngưỡng đã nới lỏng trong vendor-guard: RAM<=4GB hoặc CPU<=4 nhân.
+   - Tắt particle canvas + pointer-glow + blob animate (repaint liên tục)
+   - Tắt marquee vô hạn + hue-slide chữ gradient chạy nền
+   Hiệu ứng scroll/reveal/tilt vẫn giữ nguyên.
+   -------------------------------------------------------------------------- */
+html.low-power .bg-canvas,
+html.low-power #pointer-glow,
+html.low-power .bg-blobs { display: none !important; }
+html.low-power .marquee__track,
+html.low-power .grad-text { animation: none !important; }
+html.low-power .bg-blobs span { animation: none !important; }
 
 /* --------------------------------------------------------------------------
    24. IN ẤN

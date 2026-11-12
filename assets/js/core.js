@@ -140,15 +140,27 @@
       }
     });
 
-    (function loop() {
+    var cursorRaf = null;
+    function cursorLoop() {
+      cursorRaf = null;
       dotX = Core.lerp(dotX, mouseX, 0.32);
       dotY = Core.lerp(dotY, mouseY, 0.32);
       ringX = Core.lerp(ringX, mouseX, 0.16);
       ringY = Core.lerp(ringY, mouseY, 0.16);
       dot.style.transform = 'translate(-50%,-50%) translate(' + dotX + 'px,' + dotY + 'px)';
       ring.style.transform = 'translate(-50%,-50%) translate(' + ringX + 'px,' + ringY + 'px)';
-      requestAnimationFrame(loop);
-    })();
+      /* Chỉ chạy tiếp khi chuột còn di chuyển — đứng yên thì dừng hẳn,
+         trước đây loop 60fps vĩnh viễn kể cả khi không chạm chuột. */
+      var moving = Math.abs(mouseX - dotX) > 0.1 || Math.abs(mouseY - dotY) > 0.1 ||
+                   Math.abs(mouseX - ringX) > 0.1 || Math.abs(mouseY - ringY) > 0.1;
+      if (moving && !document.hidden) cursorRaf = requestAnimationFrame(cursorLoop);
+    }
+
+    /* Đánh thức loop khi chuột di chuyển */
+    document.addEventListener('mousemove', function () {
+      if (!cursorRaf && !document.hidden) cursorRaf = requestAnimationFrame(cursorLoop);
+    }, { passive: true });
+    cursorRaf = requestAnimationFrame(cursorLoop);
   };
 
   /* ---------------------------------------------------------------

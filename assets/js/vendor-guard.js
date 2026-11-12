@@ -52,7 +52,17 @@
     });
   }
 
-  V.lowPower = V.isTouch || (navigator.hardwareConcurrency || 8) <= 2;
+  V.lowPower = (function () {
+    try {
+      var hc = navigator.hardwareConcurrency || 8;
+      var dm = navigator.deviceMemory || 8;
+      var sd = (navigator.connection && navigator.connection.saveData) === true;
+      return V.isTouch || hc <= 4 || dm <= 4 || sd;
+    } catch (e) { return V.isTouch; }
+  })();
+  try {
+    if (V.lowPower) document.documentElement.classList.add('low-power');
+  } catch (e) {}
 
   /**
    * Nạp một script bất đồng bộ. Luôn resolve (không reject) để không chặn

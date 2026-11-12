@@ -55,9 +55,10 @@
     if (el.getAttribute('data-typed') === '1') return;
     el.setAttribute('data-typed', '1');
 
-    /* Giữ chỗ phần chưa gõ bằng ký tự tàng hình (nbsp) để không co giãn
-       layout và không hiện chấm "·" gây bẩn chữ. */
-    var HIDDEN = ' ';
+    /* Giữ chỗ phần chưa gõ bằng NBSP để không co giãn layout,
+       không hiện chấm bẩn chữ. Dùng escape rõ ràng tránh bị editor
+       chuẩn hoá thành space thường. */
+    var HIDDEN = '\u00A0';
 
     var start = performance.now() + delay * 1000;
     var caret = document.createElement('span');
@@ -216,25 +217,28 @@
      --------------------------------------------------------------- */
   function splitWords(el) {
     if (!el) return [];
-    if (window.SplitText) {
-      try {
-        var split = new window.SplitText(el, { type: 'words', wordsClass: 'word' });
-        return split.words || [];
-      } catch (e) {
-        /* fallthrough */
-      }
+    /* Phần tử gradient (Thông Minh) giữ nguyên khối — tách nhỏ sẽ
+       phá background-clip:text khiến chữ tàng hình. */
+    if (el.classList && el.classList.contains('grad-text')) {
+      return [el];
     }
-    // Fallback: tự tách từ bằng text node
-    var words = el.textContent.trim().split(/\s+/);
+    /* Không dùng SplitText ở hero: plugin bọc từ bằng <div> gây vỡ
+       layout inline + một số trình đọc chỉ thấy 1 dòng ("Thông Minh").
+       Fallback span giữ đúng 3 dòng "Nhà / Thông Minh / cho mọi nhà". */
+    // Fallback: tự tách từ. KHÔNG giữ space bằng text-node (dễ bị nuốt
+    // khi nằm cạnh inline-block) — khe từ do CSS margin đảm nhiệm.
+    var raw = el.textContent || '';
+    var tokens = raw.split(/\s+/);
     el.textContent = '';
     var out = [];
-    words.forEach(function (w, i) {
+    tokens.forEach(function (tok) {
+      if (!tok) return;
+      if (out.length) el.appendChild(document.createTextNode(' '));
       var span = document.createElement('span');
-      span.className = 'word';
-      span.textContent = w;
+      span.className = 'word word--split';
+      span.textContent = tok;
       el.appendChild(span);
       out.push(span);
-      if (i < words.length - 1) el.appendChild(document.createTextNode(' '));
     });
     return out;
   }
@@ -267,15 +271,20 @@
        scale) và giữ lại fade — an toàn cho người mắc chóng mặt.
        --------------------------------------------------------------- */
     if (reduce) {
-      if (badge) tl.from(badge, { opacity: 0, duration: 0.4 }, 0);
-      if (words.length) tl.from(words, { opacity: 0, duration: 0.5, stagger: 0.04 }, 0);
-      if (sub) tl.from(sub, { opacity: 0, duration: 0.5 }, 0.1);
-      if (cta.length) tl.from(cta, { opacity: 0, duration: 0.5, stagger: 0.06 }, 0.15);
-      if (meta.length) tl.from(meta, { opacity: 0, duration: 0.5, stagger: 0.05 }, 0.2);
-      if (showcase) tl.from(showcase, { opacity: 0, duration: 0.7 }, 0.1);
-      if (cards.length) tl.from(cards, { opacity: 0, duration: 0.5, stagger: 0.05 }, 0.2);
-      if (chips.length) tl.from(chips, { opacity: 0, duration: 0.5, stagger: 0.05 }, 0.25);
-      if (hint) tl.from(hint, { opacity: 0, duration: 0.4 }, 0.3);
+      /* motion=off / Animation effects Off: hiện ngay, không dùng tl.from
+         (from kẹt opacity:0 nếu ticker chậm → hero trắng trơn). */
+      var alive = [badge, sub, showcase, hint].concat(cta, meta, cards, chips);
+      alive.forEach(function (el) {
+        if (!el) return;
+        try { gsap.set(el, { clearProps: 'transform,opacity,visibility' }); } catch (e) {}
+        el.style.opacity = '1';
+        el.style.visibility = 'visible';
+      });
+      words.forEach(function (w) {
+        try { gsap.set(w, { clearProps: 'all' }); } catch (e) {}
+        w.style.opacity = '1';
+        w.style.visibility = 'visible';
+      });
       return tl;
     }
 
@@ -676,15 +685,13 @@
       }
     }
 
-    /* --- Marquee: dừng khi hover --- (tắt vòng lặp vô hạn khi reduce) --- */
+    /* --- Marquee: chỉ dùng CSS animation (giữ trong style.css) ---
+       TRƯỚC ĐÂY vừa chạy CSS marquee 32s infinite VỪA tạo thêm GSAP tween
+       repeat:-1 trên cùng element → 2 animation giằng nhau, tốn 1 ticker
+       vô ích và gây giật. Nay bỏ GSAP, CSS đã có :hover pause sẵn. */
     var marqueeTrack = $('.marquee__track');
     if (marqueeTrack && !reduce) {
-      var mq = gsap.to(marqueeTrack, { xPercent: -50, duration: 26, ease: 'none', repeat: -1 });
-      var marquee = $('.marquee');
-      if (marquee) {
-        marquee.addEventListener('mouseenter', function () { gsap.to(mq, { timeScale: 0.12, duration: 0.4 }); });
-        marquee.addEventListener('mouseleave', function () { gsap.to(mq, { timeScale: 1, duration: 0.5 }); });
-      }
+      marqueeTrack.style.willChange = 'transform';
     }
 
     /* --- Thông điệp: từng dòng + hào quang --- */

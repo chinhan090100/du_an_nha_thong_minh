@@ -315,6 +315,46 @@ h1, h2, h3, h4 {
   box-shadow: var(--p-shadow);
   transform-style: preserve-3d;
   will-change: transform;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Màn chéo ánh sáng quét qua mỗi khi slide mới vào (biến --sweep do JS điều khiển) */
+.p-slide__inner::after {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 42%,
+    rgba(255, 255, 255, 0.09) 48%,
+    rgba(255, 255, 255, 0.32) 50%,
+    rgba(255, 255, 255, 0.09) 52%,
+    transparent 58%
+  );
+  transform: translateX(var(--sweep, -130%));
+  mix-blend-mode: screen;
+  opacity: 0.9;
+}
+
+/* hào quang viền khi slide active — cảm giác "màn hình đang sáng" */
+.p-slide.is-active .p-slide__inner {
+  border-color: rgba(120, 220, 255, 0.34);
+  box-shadow:
+    var(--p-shadow),
+    0 0 0 1px rgba(74, 222, 128, 0.18),
+    0 0 60px rgba(34, 211, 238, 0.14);
+}
+
+/* Thẻ active phát sáng nhẹ sau khi bật vào */
+.p-slide.is-active .p-card,
+.p-slide.is-active .p-tl,
+.p-slide.is-active .p-stat {
+  box-shadow:
+    0 14px 40px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(74, 222, 128, 0.14);
 }
 
 /* Vùng cuộn nội dung (giữ overflow ở lớp con để không phá preserve-3d) */
@@ -350,11 +390,41 @@ h1, h2, h3, h4 {
   transform: none;
 }
 
-/* Đơn vị morph: tiêu đề cuộn theo chiều 3D */
+/* Đơn vị morph: tiêu đề cuộn theo chiều 3D.
+   Khoảng cách giữa các từ do MARGIN đảm nhiệm (không giữ text-node
+   trắng — text-node dễ bị trình duyệt nuốt khi nằm cạnh inline-block,
+   gây "trongmô hình"). splitMorph chỉ sinh span từ, CSS dưới đây
+   tự chèn khe giữa 2 unit kề nhau. */
 .p-morph-unit {
   display: inline-block;
   transform-style: preserve-3d;
   will-change: transform, opacity;
+}
+
+/* Khe từ trong mọi tiêu đề morph — dùng khoảng trắng thật do JS chèn
+   (text-node ' '), CSS không cộng thêm margin để tránh gấp đôi khe. */
+.p-slide__inner .p-morph-unit + .p-morph-unit {
+  margin-left: 0;
+}
+
+/* Fallback TRƯỚC khi JS tách từ: khoảng trắng trong HTML thô.
+   Sau khi split, khe do text-node thật đảm nhiệm nên margin về 0. */
+.p-title .p-grad,
+.p-lead .p-grad,
+.p-quote__text .p-grad {
+  margin-left: 0;
+}
+.p-cover__title .p-grad { margin-left: 0; }
+
+/* Hai dòng bìa là khối riêng — không ăn khe margin ngang */
+.p-cover__title > .p-morph-unit + .p-morph-unit {
+  margin-left: 0;
+}
+
+/* Con trực tiếp của cover title phải giữ dạng khối để xuống dòng */
+.p-cover__title > span.p-morph-unit,
+.p-cover__title > .p-morph-unit {
+  display: block;
 }
 
 /* Lớp chiều sâu nổi lên/xuống (fallback CSS khi không có GSAP) */
@@ -903,7 +973,12 @@ h1, h2, h3, h4 {
   margin-bottom: 1rem;
 }
 
-.p-cover__title span { display: block; }
+.p-cover__title > span { display: block; }
+
+/* Từ con bên trong (do splitMorph sinh) vẫn inline-block để nằm cùng dòng */
+.p-cover__title > span .p-morph-unit {
+  display: inline-block;
+}
 
 .p-cover__sub {
   color: var(--p-text-2);
@@ -1449,6 +1524,19 @@ h1, h2, h3, h4 {
   .p-cover__badge::after,
   .p-flow__hub::after { display: none; }
 }
+
+/* --------------------------------------------------------------------------
+   20b. MÁY YẾU — tắt hiệu ứng ngầm ngốn GPU (giữ chuyển slide chính)
+   -------------------------------------------------------------------------- */
+html.low-power #p-canvas { display: none !important; }
+html.low-power .p-slide__inner { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+html.low-power .p-grad { animation: none !important; }
+html.low-power .p-slide__inner::after,
+html.low-power .p-eyebrow::after,
+html.low-power .p-cover__badge::after,
+html.low-power .p-flow__hub::after { display: none !important; }
+html.low-power .p-float-depth,
+html.low-power .p-slide.is-active .p-slide__inner [data-depth] { animation: none !important; }
 
 /* --------------------------------------------------------------------------
    21. IN ẤN — mỗi slide 1 trang A4 ngang
