@@ -12,7 +12,6 @@
     scrollTrigger: false,
     splitText: false,
     lenis: false,
-    three: false,
   };
 
   V.cdn = {
@@ -22,17 +21,6 @@
     splitText:
       'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/SplitText.min.js',
     lenis: 'https://unpkg.com/lenis@1.1.18/dist/lenis.min.js',
-    // Three r128 là bản UMD — các addon postprocessing cùng phiên bản cần
-    // global THREE nên phải nạp theo thứ tự.
-    three: 'https://unpkg.com/three@0.128.0/build/three.min.js',
-    threeAddons: [
-      'https://unpkg.com/three@0.128.0/examples/js/postprocessing/EffectComposer.js',
-      'https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js',
-      'https://unpkg.com/three@0.128.0/examples/js/postprocessing/ShaderPass.js',
-      'https://unpkg.com/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js',
-      'https://unpkg.com/three@0.128.0/examples/js/shaders/CopyShader.js',
-      'https://unpkg.com/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js',
-    ],
   };
 
   V.reducedMotion =
@@ -167,38 +155,6 @@
       })
     );
 
-    // Nạp Three trước, sau đó addon postprocessing (phụ thuộc global THREE).
-    jobs.push(
-      V.loadScript(V.cdn.three).then(function (ok) {
-        V.flags.three = !!(ok && window.THREE);
-        if (!V.flags.three) return false;
-        /* PHẢI nạp addon theo THỨ TỰ: RenderPass/UnrealBloomPass kế thừa
-           THREE.Pass (định nghĩa trong EffectComposer.js) và dùng
-           CopyShader / LuminosityHighPassShader ở thân class.
-           Nạp song song sẽ gây lỗi "THREE is not defined / extends undefined"
-           → mất RenderPass → composer không khởi tạo được. */
-        var chain = Promise.resolve();
-        V.cdn.threeAddons.forEach(function (u) {
-          chain = chain.then(function () {
-            return V.loadScript(u);
-          });
-        });
-        return chain.then(function () {
-          // Addon r128 đính vào namespace THREE (không phải window global)
-          V.flags.threeAddons = !!(
-            window.THREE &&
-            window.THREE.EffectComposer &&
-            window.THREE.RenderPass &&
-            window.THREE.UnrealBloomPass &&
-            window.THREE.ShaderPass &&
-            window.THREE.CopyShader &&
-            window.THREE.LuminosityHighPassShader
-          );
-          return V.flags.threeAddons;
-        });
-      })
-    );
-
     return Promise.all(jobs).then(function () {
       // Đăng ký plugin GSAP nếu có
       if (V.flags.gsap && V.flags.scrollTrigger && window.gsap) {
@@ -220,7 +176,6 @@
       document.documentElement.classList.add(
         V.flags.enhanced ? 'has-motion' : 'no-motion'
       );
-      document.documentElement.classList.toggle('has-webgl', !!V.flags.three);
       if (typeof done === 'function') done(V.flags);
     });
   };

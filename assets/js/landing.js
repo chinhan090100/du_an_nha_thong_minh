@@ -273,40 +273,7 @@
   }
 
   /* ---------------------------------------------------------------
-     6. HERO 3D — khởi tạo scene
-     --------------------------------------------------------------- */
-  function initScene() {
-    var stage = $('.hero__stage');
-    if (!stage || !window.House3D) return;
-    window.House3D.init(stage);
-
-    // Đồng bộ theme hiện tại với scene 3D
-    var current = document.documentElement.getAttribute('data-theme') || 'light';
-    window.House3D.applyTheme(current === 'dark' ? 'night' : 'day');
-
-    // Nghe sự kiện đổi theme
-    document.addEventListener('themechange', function (e) {
-      var t = (e.detail && e.detail.theme) || 'light';
-      if (window.House3D.applyTheme) {
-        window.House3D.applyTheme(t === 'dark' ? 'night' : 'day');
-      }
-    });
-  }
-
-  /* ---------------------------------------------------------------
-     7. CONSOLE 3D — UI gõ lệnh điều khiển scene
-     --------------------------------------------------------------- */
-  function initConsole3D() {
-    if (!window.Console3D) return;
-    try {
-      window.Console3D.init();
-    } catch (e) {
-      console.warn('Console3D init lỗi:', e);
-    }
-  }
-
-  /* ---------------------------------------------------------------
-     8. GLOW THEO CON TRỎ (radial light) trên body
+     6. GLOW THEO CON TRỎ (radial light) trên body
      --------------------------------------------------------------- */
   function initPointerGlowGlobal() {
     if (!hasFinePointer) return;
@@ -333,9 +300,9 @@
   }
 
   /* ---------------------------------------------------------------
-     8. BẢNG CHẨN ĐOÁN (nhấn phím D)
+     7. BẢNG CHẨN ĐOÁN (nhấn phím D)
         Giúp xác nhận chính xác nguyên nhân "Chrome PC mất hiệu ứng"
-        trên máy thật thay vì đoán: GSAP/ScrollTrigger/Lenis/THREE/WebGL
+        trên máy thật thay vì đoán: GSAP/ScrollTrigger/Lenis
         đã nạp chưa, reducedMotion, hasFinePointer, maxTouchPoints, FPS.
      --------------------------------------------------------------- */
   function initDiagnostics() {
@@ -373,8 +340,6 @@
       var gsapOk = typeof window.gsap !== 'undefined';
       var stOk = gsapOk && !!window.ScrollTrigger;
       var lenisOk = !!(window.Motion && window.Motion.lenis);
-      var threeOk = typeof window.THREE !== 'undefined';
-      var houseOk = !!(window.House3D && window.House3D.scene);
       var webgl = false;
       try {
         var c = document.createElement('canvas');
@@ -398,8 +363,6 @@
         row('ScrollTrigger', stOk ? 'đã nạp' : 'KHÔNG CÓ', stOk) +
         row('Số ScrollTrigger', stCount) +
         row('Lenis smooth-scroll', lenisOk ? 'đang chạy' : 'tắt') +
-        row('THREE', threeOk ? window.THREE.REVISION : 'KHÔNG CÓ', threeOk) +
-        row('House3D scene', houseOk ? 'đã tạo' : 'chưa', houseOk) +
         row('WebGL', webgl ? 'hỗ trợ' : 'KHÔNG', webgl) +
         row('prefers-reduced-motion', reduce ? 'REDUCE (tắt motion lớn)' : 'no-preference', !reduce) +
         row('hasFinePointer (chuột)', hasFinePointer ? 'CÓ — hiệu ứng chuột BẬT' : 'KHÔNG — tắt hiệu ứng chuột', hasFinePointer) +
@@ -445,8 +408,6 @@
     initMarquee();
     initPointerGlow();
     initPointerGlowGlobal();
-    initScene();
-    initConsole3D();
     initDiagnostics();
   };
 })(window, document);

@@ -38,21 +38,31 @@
   Motion.lenis = null;
 
   /* ---------------------------------------------------------------
-     TEXT SCRAMBLE — chữ hiện dần từ ký tự ngẫu nhiên
+     TYPEWRITER — chữ gõ máy từng ký tự, caret nhấp nháy
      --------------------------------------------------------------- */
-  var CHARS = '!<>-_\\/[]{}—=+*^?#________ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   Motion.scramble = function (el, text, opts) {
     if (!el) return;
     opts = opts || {};
     var duration = opts.duration || 1.6;
     var delay = opts.delay || 0;
-    var start = performance.now() + delay * 1000;
-    var revealed = 0;
+    text = text || el.getAttribute('data-text') || el.textContent || '';
 
     if (reduce) {
       el.textContent = text;
       return;
     }
+    /* Tránh chạy 2 lần (boot rescue + preloader) gây nháy chữ */
+    if (el.getAttribute('data-typed') === '1') return;
+    el.setAttribute('data-typed', '1');
+
+    /* Giữ chỗ phần chưa gõ bằng ký tự tàng hình (nbsp) để không co giãn
+       layout và không hiện chấm "·" gây bẩn chữ. */
+    var HIDDEN = ' ';
+
+    var start = performance.now() + delay * 1000;
+    var caret = document.createElement('span');
+    caret.className = 'type-caret';
+    caret.setAttribute('aria-hidden', 'true');
 
     function frame(now) {
       var elapsed = now - start;
@@ -63,26 +73,21 @@
       var progress = Math.min(elapsed / (duration * 1000), 1);
       var count = Math.floor(progress * text.length);
 
-      var out = '';
-      for (var i = 0; i < text.length; i++) {
-        var ch = text[i];
-        if (ch === ' ') { out += ' '; continue; }
-        if (i < count) {
-          out += ch;
-        } else if (i < count + 6) {
-          out += CHARS[Math.floor(Math.random() * CHARS.length)];
-        } else {
-          out += ch;
-        }
-      }
-      el.textContent = out;
-      revealed = count;
+      /* Gõ máy: chỉ hiện ký tự đã gõ + caret, phần chưa gõ giữ chỗ
+         bằng ký tự tàng hình để không co giãn layout, không bẩn chữ */
+      var typed = text.slice(0, count);
+      var rest = text.slice(count).replace(/[^\s]/g, HIDDEN);
+      el.textContent = typed + rest;
+      el.appendChild(caret);
 
-      if (progress < 1) requestAnimationFrame(frame);
-      else el.textContent = text;
+      if (progress < 1) {
+        requestAnimationFrame(frame);
+      } else {
+        el.textContent = text;
+        if (caret.parentNode) caret.parentNode.removeChild(caret);
+      }
     }
     requestAnimationFrame(frame);
-    return revealed;
   };
 
   /* ---------------------------------------------------------------
@@ -245,8 +250,9 @@
     var sub = $('.hero__subtitle');
     var cta = $$('.hero__cta > *');
     var meta = $$('.hero__meta-item');
-    var stage = $('.hero__stage');
-    var tags = $$('.hero__stage-tag, .hero__stage-hint');
+    var showcase = $('.hero__showcase');
+    var cards = $$('.hero__card');
+    var chips = $$('.hero__chip');
     var hint = $('.scroll-hint');
 
     var tl = gsap.timeline({ delay: 0.15 });
@@ -266,8 +272,9 @@
       if (sub) tl.from(sub, { opacity: 0, duration: 0.5 }, 0.1);
       if (cta.length) tl.from(cta, { opacity: 0, duration: 0.5, stagger: 0.06 }, 0.15);
       if (meta.length) tl.from(meta, { opacity: 0, duration: 0.5, stagger: 0.05 }, 0.2);
-      if (stage) tl.from(stage, { opacity: 0, duration: 0.7 }, 0.1);
-      if (tags.length) tl.from(tags, { opacity: 0, duration: 0.5, stagger: 0.05 }, 0.25);
+      if (showcase) tl.from(showcase, { opacity: 0, duration: 0.7 }, 0.1);
+      if (cards.length) tl.from(cards, { opacity: 0, duration: 0.5, stagger: 0.05 }, 0.2);
+      if (chips.length) tl.from(chips, { opacity: 0, duration: 0.5, stagger: 0.05 }, 0.25);
       if (hint) tl.from(hint, { opacity: 0, duration: 0.4 }, 0.3);
       return tl;
     }
@@ -323,17 +330,32 @@
       );
     }
 
-    if (stage) {
+    if (showcase) {
       tl.from(
-        stage,
-        { scale: 0.86, opacity: 0, rotateY: -22, duration: 1.3, ease: 'expo.out' },
-        '-=0.95'
+        showcase,
+        { opacity: 0, duration: 0.9, ease: 'power2.out' },
+        '-=1.05'
       );
     }
 
-    if (tags.length) {
+    if (cards.length) {
       tl.from(
-        tags,
+        cards,
+        {
+          y: 46,
+          opacity: 0,
+          scale: 0.9,
+          duration: 1.05,
+          stagger: 0.12,
+          ease: 'expo.out',
+        },
+        '-=0.85'
+      );
+    }
+
+    if (chips.length) {
+      tl.from(
+        chips,
         { scale: 0.7, opacity: 0, duration: 0.6, stagger: 0.11, ease: 'back.out(2)' },
         '-=0.72'
       );
@@ -688,24 +710,6 @@
       }
     }
 
-    /* --- Điều khiển zoom camera 3D theo scroll --- */
-    if (window.House3D) {
-      gsap.to(
-        {},
-        {
-          scrollTrigger: {
-            trigger: '.hero',
-            start: 'top top',
-            end: 'bottom top',
-            scrub: 0.6,
-            onUpdate: function (self) {
-              window.House3D.setZoom(1 + self.progress * 0.42);
-            },
-          },
-        }
-      );
-    }
-
     /* --- Nav ẩn khi cuộn xuống --- */
     var nav = $('.nav');
     if (nav) {
@@ -814,8 +818,8 @@
     // Scramble tagline sau khi hero vào (bỏ qua khi giảm chuyển động)
     var scr = $('.hero__subtitle .scramble');
     if (!reduce && scr && scr.getAttribute('data-text')) {
-      gsap.delayedCall(1.1, function () {
-        Motion.scramble(scr, scr.getAttribute('data-text'), { duration: 1.5 });
+      gsap.delayedCall(0.4, function () {
+        Motion.scramble(scr, scr.getAttribute('data-text'), { duration: 1.8 });
       });
     }
 

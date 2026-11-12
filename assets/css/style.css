@@ -928,7 +928,7 @@ html[data-theme='dark'] .theme-toggle .sun { display: none; }
 .hero__title .line {
   display: block;
   overflow: hidden;
-  padding-bottom: 0.08em;
+  padding-bottom: 0.12em;
 }
 
 .hero__title__inner {
@@ -958,6 +958,21 @@ html.has-motion .hero__title__inner {
   font-weight: 600;
 }
 
+/* Caret gõ máy cho tagline hero */
+.type-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.12em;
+  background: var(--accent);
+  animation: type-caret-blink 0.8s steps(2, start) infinite;
+}
+
+@keyframes type-caret-blink {
+  to { opacity: 0; }
+}
+
 .hero__cta {
   display: flex;
   flex-wrap: wrap;
@@ -984,6 +999,7 @@ html.has-motion .hero__title__inner {
   font-size: 1.65rem;
   line-height: 1;
   color: var(--accent);
+  font-variant-numeric: tabular-nums;
 }
 
 .hero__meta-item span {
@@ -993,61 +1009,164 @@ html.has-motion .hero__title__inner {
   letter-spacing: 0.05em;
 }
 
-/* Khung 3D */
-.hero__stage {
+/* --------------------------------------------------------------------------
+   HERO SHOWCASE — bộ ảnh thật xếp lớp, CSS-only (không WebGL)
+   -------------------------------------------------------------------------- */
+.hero__showcase {
   position: relative;
-  aspect-ratio: 1 / 1;
   width: 100%;
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  /* Nền khung hòa với màu nền trang để không bị viền trắng khi đổi theme */
-  background:
-    radial-gradient(120% 100% at 50% 0%,
-      color-mix(in srgb, var(--accent) 14%, transparent),
-      transparent 62%),
-    linear-gradient(160deg,
-      color-mix(in srgb, var(--accent) 10%, transparent),
-      color-mix(in srgb, var(--accent-2) 8%, transparent));
-  border: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
-  box-shadow: var(--shadow-lg);
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+  perspective: 1200px;
   transform-style: preserve-3d;
-  transition: background 0.5s var(--ease), border-color 0.5s var(--ease);
 }
 
-/* Viền neon mảnh quanh khung 3D — đồng bộ nhịp với scene */
-.hero__stage::before {
+/* Quầng sáng mềm phía sau ảnh chính */
+.hero__showcase::before {
   content: '';
   position: absolute;
-  inset: 0;
-  z-index: 2;
+  inset: 8% 6%;
+  z-index: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 45%,
+      color-mix(in srgb, var(--accent) 26%, transparent),
+      transparent 62%),
+    radial-gradient(circle at 78% 78%,
+      color-mix(in srgb, var(--accent-2) 22%, transparent),
+      transparent 58%);
+  filter: blur(28px);
+  opacity: 0.85;
   pointer-events: none;
-  border-radius: inherit;
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent),
-    inset 0 1px 0 0 color-mix(in srgb, #fff 12%, transparent);
-  transition: box-shadow 0.5s var(--ease);
 }
 
-.hero__stage canvas {
+/* --- Thẻ ảnh --- */
+.hero__card {
+  position: absolute;
+  margin: 0;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--grad-card);
+  border: 1px solid var(--glass-brd);
+  box-shadow: var(--shadow-lg);
+  isolation: isolate;
+  transform-style: preserve-3d;
+}
+
+.hero__card--main {
+  z-index: 3;
+  width: 76%;
+  aspect-ratio: 1 / 1.02;
+  box-shadow:
+    var(--shadow-lg),
+    0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent);
+}
+
+.hero__card--a {
+  z-index: 2;
+  width: 44%;
+  aspect-ratio: 4 / 3;
+  left: -2%;
+  bottom: 4%;
+  transform: rotate(-5deg);
+  box-shadow: var(--shadow-md);
+}
+
+.hero__card--b {
+  z-index: 1;
+  width: 38%;
+  aspect-ratio: 1 / 1;
+  right: -1%;
+  top: 3%;
+  transform: rotate(4.5deg);
+  box-shadow: var(--shadow-md);
+}
+
+.hero__card__img {
+  display: block;
   width: 100%;
   height: 100%;
-  display: block;
-  touch-action: pan-y;
+  object-fit: cover;
+  transform: scale(1.02);
 }
 
-.hero__stage::after {
+/* Ken Burns nhẹ — chỉ ảnh chính, các ảnh phụ giữ tĩnh */
+.hero__card--main .hero__card__img--kenburns {
+  animation: hero-kenburns 22s var(--ease-in-out) infinite alternate;
+  will-change: transform;
+}
+
+.hero__card--a .hero__card__img,
+.hero__card--b .hero__card__img {
+  animation: none;
+  transform: scale(1.02);
+}
+
+@keyframes hero-kenburns {
+  0% { transform: scale(1.03) translate3d(0, 0, 0); }
+  100% { transform: scale(1.12) translate3d(-1.4%, -1.1%, 0); }
+}
+
+/* Lớp phủ gradient cho caption dễ đọc */
+.hero__card::after {
   content: '';
   position: absolute;
   inset: 0;
+  z-index: 1;
   pointer-events: none;
-  background: radial-gradient(ellipse at 50% 120%, transparent 40%, color-mix(in srgb, var(--bg) 55%, transparent) 100%);
+  background: linear-gradient(
+    to top,
+    rgba(4, 12, 22, 0.78) 0%,
+    rgba(4, 12, 22, 0.22) 32%,
+    transparent 62%
+  );
 }
 
-/* Nhãn nổi trên khung 3D */
-.hero__stage-tag {
+.hero__card__cap {
   position: absolute;
-  z-index: 3;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
   display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 1.2rem 1.1rem 1rem;
+  color: #eaf6ff;
+  pointer-events: none;
+}
+
+.hero__card__cap-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.98rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.hero__card__cap-sub {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(234, 246, 255, 0.72);
+}
+
+.hero__card__cap--mini {
+  padding: 0.7rem 0.75rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(234, 246, 255, 0.88);
+}
+
+/* --- Chip trạng thái nổi --- */
+.hero__chip {
+  position: absolute;
+  z-index: 5;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.9rem;
@@ -1057,13 +1176,14 @@ html.has-motion .hero__title__inner {
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-brd);
   box-shadow: var(--shadow-md);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--text);
   white-space: nowrap;
+  pointer-events: none;
 }
 
-.hero__stage-tag i {
+.hero__chip i {
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -1072,304 +1192,10 @@ html.has-motion .hero__title__inner {
   animation: pulse-dot 2s var(--ease-in-out) infinite;
 }
 
-.hero__stage-tag--tl { top: 1.1rem; left: 1.1rem; }
-.hero__stage-tag--br { bottom: 1.1rem; right: 1.1rem; }
+.hero__chip--tl { top: 1.2%; left: -1%; }
+.hero__chip--br { bottom: 5%; right: 0; }
+.hero__chip--bl { bottom: 24%; left: -3%; font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 
-.hero__stage-hint {
-  position: absolute;
-  bottom: 1.1rem;
-  left: 1.1rem;
-  z-index: 3;
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-}
-
-.hero__stage-hint svg {
-  width: 15px;
-  height: 15px;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 2;
-}
-
-/* --------------------------------------------------------------------------
-   CONSOLE 3D — terminal gõ lệnh điều khiển scene
-   -------------------------------------------------------------------------- */
-.console3d {
-  position: absolute;
-  left: 0.9rem;
-  right: 0.9rem;
-  bottom: 0.9rem;
-  z-index: 6;
-  pointer-events: none;
-  font-family: var(--font-mono);
-}
-
-.console3d__badge {
-  pointer-events: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.42rem 0.8rem;
-  border-radius: var(--radius-pill);
-  background: rgba(4, 10, 18, 0.78);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(103, 232, 249, 0.35);
-  box-shadow:
-    0 0 0 1px rgba(103, 232, 249, 0.08),
-    0 10px 26px rgba(0, 0, 0, 0.45);
-  color: #a5f3fc;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease);
-}
-
-.console3d__badge:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 0 0 1px rgba(103, 232, 249, 0.25),
-    0 12px 30px rgba(0, 0, 0, 0.5);
-}
-
-.console3d__badge svg {
-  width: 15px;
-  height: 15px;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 1.8;
-}
-
-.console3d__badge kbd {
-  font-family: inherit;
-  font-size: 0.62rem;
-  padding: 0.05rem 0.32rem;
-  border-radius: 5px;
-  background: rgba(103, 232, 249, 0.14);
-  border: 1px solid rgba(103, 232, 249, 0.28);
-  color: #67e8f9;
-}
-
-.console3d__panel {
-  pointer-events: auto;
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: calc(100% + 0.6rem);
-  display: flex;
-  flex-direction: column;
-  max-height: min(46vh, 340px);
-  border-radius: 14px;
-  overflow: hidden;
-  background: rgba(4, 10, 18, 0.84);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(103, 232, 249, 0.28);
-  box-shadow:
-    0 0 0 1px rgba(103, 232, 249, 0.08),
-    0 22px 60px rgba(0, 0, 0, 0.55);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(14px) scale(0.97);
-  transform-origin: bottom center;
-  transition:
-    opacity 0.3s var(--ease),
-    transform 0.3s var(--ease),
-    visibility 0.3s var(--ease);
-}
-
-.console3d.is-open .console3d__panel {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0) scale(1);
-}
-
-.console3d__bar {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.5rem 0.7rem;
-  background: linear-gradient(
-    180deg,
-    rgba(103, 232, 249, 0.12),
-    rgba(103, 232, 249, 0.02)
-  );
-  border-bottom: 1px solid rgba(103, 232, 249, 0.18);
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #7dd3fc;
-}
-
-.console3d__leds {
-  display: inline-flex;
-  gap: 5px;
-}
-
-.console3d__leds i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #22d3ee;
-  box-shadow: 0 0 8px rgba(34, 211, 238, 0.8);
-}
-
-.console3d__leds i:nth-child(2) {
-  background: #4ade80;
-  box-shadow: 0 0 8px rgba(74, 222, 128, 0.8);
-}
-
-.console3d__leds i:nth-child(3) {
-  background: #fbbf24;
-  box-shadow: 0 0 8px rgba(251, 191, 36, 0.8);
-}
-
-.console3d__title {
-  font-weight: 700;
-  flex: 1;
-}
-
-.console3d__btn {
-  font-family: inherit;
-  font-size: 0.64rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #7dd3fc;
-  padding: 0.16rem 0.45rem;
-  border-radius: 6px;
-  border: 1px solid rgba(103, 232, 249, 0.22);
-  background: rgba(103, 232, 249, 0.06);
-  cursor: pointer;
-  transition: background 0.2s var(--ease);
-}
-
-.console3d__btn:hover {
-  background: rgba(103, 232, 249, 0.18);
-}
-
-.console3d__btn--x:hover {
-  background: rgba(248, 113, 113, 0.22);
-  border-color: rgba(248, 113, 113, 0.45);
-  color: #fecaca;
-}
-
-.console3d__out {
-  flex: 1;
-  min-height: 78px;
-  max-height: 210px;
-  overflow-y: auto;
-  padding: 0.6rem 0.75rem;
-  font-size: 0.74rem;
-  line-height: 1.55;
-  color: #cbd5e1;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(103, 232, 249, 0.35) transparent;
-}
-
-.console3d__out::-webkit-scrollbar {
-  width: 6px;
-}
-
-.console3d__out::-webkit-scrollbar-thumb {
-  background: rgba(103, 232, 249, 0.32);
-  border-radius: 3px;
-}
-
-.console3d__row {
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.console3d__row--cmd {
-  color: #e0f2fe;
-  font-weight: 700;
-  margin-top: 0.35rem;
-}
-
-.console3d__row--ok {
-  color: #86efac;
-}
-
-.console3d__row--err {
-  color: #fca5a5;
-}
-
-.console3d__row--info {
-  color: #7dd3fc;
-}
-
-.console3d__line {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.45rem 0.75rem;
-  border-top: 1px solid rgba(103, 232, 249, 0.16);
-  background: rgba(2, 8, 16, 0.6);
-}
-
-.console3d__prompt {
-  color: #4ade80;
-  font-weight: 700;
-  font-size: 0.8rem;
-}
-
-.console3d__input {
-  flex: 1;
-  min-width: 0;
-  background: transparent;
-  border: 0;
-  outline: none;
-  color: #e2e8f0;
-  font-family: inherit;
-  font-size: 0.76rem;
-  caret-color: transparent;
-}
-
-.console3d__input::placeholder {
-  color: rgba(148, 163, 184, 0.6);
-}
-
-.console3d__cursor {
-  width: 8px;
-  height: 15px;
-  background: #22d3ee;
-  opacity: 0.85;
-  animation: console3d-blink 1.05s steps(2, start) infinite;
-}
-
-@keyframes console3d-blink {
-  to { opacity: 0; }
-}
-
-@media (max-width: 640px) {
-  .console3d {
-    left: 0.6rem;
-    right: 0.6rem;
-    bottom: 0.6rem;
-  }
-
-  .console3d__panel {
-    max-height: 40vh;
-  }
-
-  .console3d__out {
-    max-height: 150px;
-    font-size: 0.7rem;
-  }
-
-  .console3d__badge span {
-    display: none;
-  }
-}
 
 /* --------------------------------------------------------------------------
    ẢNH MINH HOẠT THẬT (.illus)
@@ -1569,80 +1395,20 @@ html.has-motion .hero__title__inner {
   line-height: 1.55;
 }
 
-/* Fallback CSS 3D khi WebGL không khả dụng */
-.hero__stage.is-fallback {
-  display: grid;
-  place-items: center;
-  perspective: 900px;
-}
-
-.css-house {
-  position: relative;
-  width: 62%;
-  aspect-ratio: 1/1;
-  transform-style: preserve-3d;
-  animation: house-float 6s var(--ease-in-out) infinite;
-}
-
-@keyframes house-float {
-  0%, 100% { transform: translateY(0) rotateX(8deg) rotateY(-18deg); }
-  50% { transform: translateY(-18px) rotateX(8deg) rotateY(12deg); }
-}
-
-.css-house__body {
-  position: absolute;
-  inset: 28% 12% 8%;
-  background: linear-gradient(160deg, #ffffff, #dfe9f2);
-  border-radius: 12px;
-  box-shadow: var(--shadow-lg);
-}
-
-.css-house__roof {
-  position: absolute;
-  left: 4%;
-  right: 4%;
-  top: 2%;
-  height: 36%;
-  background: var(--grad-hero);
-  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-}
-
-.css-house__door {
-  position: absolute;
-  bottom: 8%;
-  left: 42%;
-  width: 16%;
-  height: 34%;
-  background: #94a3b8;
-  border-radius: 8px 8px 0 0;
-}
-
-.css-house__win {
-  position: absolute;
-  top: 42%;
-  width: 14%;
-  aspect-ratio: 1;
-  background: var(--accent-4);
-  border-radius: 6px;
-  box-shadow: 0 0 18px color-mix(in srgb, var(--accent-4) 70%, transparent);
-  animation: win-glow 3s var(--ease-in-out) infinite;
-}
-.css-house__win--l { left: 22%; }
-.css-house__win--r { right: 22%; }
-
-@keyframes win-glow {
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 1; }
-}
-
+/* Responsive cho hero showcase */
 @media (max-width: 1024px) {
   .hero__grid { grid-template-columns: 1fr; }
-  .hero__stage { max-width: 520px; margin-inline: auto; aspect-ratio: 4/3; }
+  .hero__showcase { max-width: 520px; margin-inline: auto; aspect-ratio: 4/3; }
   .hero { min-height: auto; padding-top: calc(var(--nav-h) + 3rem); }
 }
 
 @media (max-width: 640px) {
-  .hero__stage { aspect-ratio: 1/1; }
+  .hero__showcase { aspect-ratio: 1/1; max-width: 420px; }
+  .hero__card--main { width: 82%; }
+  .hero__card--a { width: 40%; left: -1%; }
+  .hero__card--b { width: 34%; right: 0; }
+  .hero__chip { font-size: 0.68rem; padding: 0.4rem 0.7rem; }
+  .hero__chip--bl { display: none; }
   .hero__meta { gap: 1.2rem 1.8rem; }
   .hero__meta-item strong { font-size: 1.35rem; }
 }
@@ -2725,8 +2491,8 @@ html.has-motion [data-reveal] {
    -------------------------------------------------------------------------- */
 @media print {
   .nav, .footer, .bg-layer, .bg-blobs, .cursor-dot, .cursor-ring,
-  .preloader, .progress-bar, .hero__stage, .marquee, .scroll-hint,
-  .console3d, .illus, .illus-grid {
+  .preloader, .progress-bar, .marquee, .scroll-hint,
+  .illus, .illus-grid {
     display: none !important;
   }
   body { background: #fff; color: #000; }

@@ -160,7 +160,7 @@
 
           <p class="hero__subtitle">
             Mô hình nhà tự động ứng dụng IoT với ESP32, cảm biến và điều khiển từ xa —
-            <span class="scramble" data-text="một sáng kiến nhỏ mang ý nghĩa lớn cho cộng đồng."></span>
+            <span class="scramble" data-text="một sáng kiến nhỏ mang ý nghĩa lớn cho cộng đồng.">một sáng kiến nhỏ mang ý nghĩa lớn cho cộng đồng.</span>
           </p>
 
           <div class="hero__cta">
@@ -175,59 +175,60 @@
           </div>
 
           <div class="hero__meta">
-            <div class="hero__meta-item"><strong>6</strong><span>Bước thực hiện</span></div>
-            <div class="hero__meta-item"><strong>8+</strong><span>Loại cảm biến</span></div>
-            <div class="hero__meta-item"><strong>5</strong><span>Tính năng chính</span></div>
-            <div class="hero__meta-item"><strong>100%</strong><span>Tự động hóa</span></div>
+            <div class="hero__meta-item"><strong data-count="6" data-duration="1.4">6</strong><span>Bước thực hiện</span></div>
+            <div class="hero__meta-item"><strong data-count="8" data-suffix="+" data-duration="1.4">8+</strong><span>Loại cảm biến</span></div>
+            <div class="hero__meta-item"><strong data-count="5" data-duration="1.4">5</strong><span>Tính năng chính</span></div>
+            <div class="hero__meta-item"><strong data-count="100" data-suffix="%" data-duration="1.6">100%</strong><span>Tự động hóa</span></div>
           </div>
         </div>
 
-        <div class="hero__stage" id="hero-stage" data-parallax="0.06">
-          <span class="hero__stage-tag hero__stage-tag--tl"><i></i> ESP32 • MQTT</span>
-          <span class="hero__stage-tag hero__stage-tag--br"><i></i> Cảm biến hoạt động</span>
-          <span class="hero__stage-hint">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11V6a2 2 0 1 1 4 0v5"/><path d="M13 11V5a2 2 0 1 1 4 0v9a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6v-3a2 2 0 0 1 4 0"/></svg>
-            Kéo để xoay
-          </span>
+        <!-- ===== SHOWCASE ẢNH THẬT — CSS-only, không WebGL ===== -->
+        <div class="hero__showcase" id="hero-showcase" data-parallax="0.06" data-tilt="5">
+          <figure class="hero__card hero__card--main">
+            <img
+              class="hero__card__img hero__card__img--kenburns"
+              src="assets/img/model-house.jpg"
+              alt="Mô hình nhà thông minh với hệ thống cảm biến IoT"
+              width="1400"
+              height="1420"
+              loading="eager"
+              decoding="async"
+            />
+            <figcaption class="hero__card__cap">
+              <span class="hero__card__cap-title">Mô hình nhà thông minh</span>
+              <span class="hero__card__cap-sub">ESP32 · MQTT · 8 cảm biến</span>
+            </figcaption>
+          </figure>
 
-          <!-- ===== CONSOLE GÕ LỆNH ĐIỀU KHIỂN SCENE 3D ===== -->
-          <div class="console3d" id="console3d" aria-live="polite">
-            <button
-              type="button"
-              class="console3d__badge"
-              id="console3d-badge"
-              aria-expanded="false"
-              aria-controls="console3d-panel"
-              title="Mở console điều khiển 3D (phím ` hoặc Ctrl+K)"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>
-              <span>Console</span>
-              <kbd>`</kbd>
-            </button>
+          <figure class="hero__card hero__card--a">
+            <img
+              class="hero__card__img"
+              src="assets/img/model-02.jpg"
+              alt="Cảnh quan mô hình nhà tự động"
+              width="1024"
+              height="768"
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption class="hero__card__cap hero__card__cap--mini">Tự động hoá</figcaption>
+          </figure>
 
-            <div class="console3d__panel" id="console3d-panel" role="dialog" aria-label="Console điều khiển scene 3D">
-              <div class="console3d__bar">
-                <span class="console3d__leds"><i></i><i></i><i></i></span>
-                <span class="console3d__title">ESP32-CONSOLE</span>
-                <button type="button" class="console3d__btn" data-console-act="clear" title="Xoá màn hình">clear</button>
-                <button type="button" class="console3d__btn console3d__btn--x" data-console-act="close" title="Đóng console">✕</button>
-              </div>
-              <div class="console3d__out" id="console3d-out"></div>
-              <form class="console3d__line" id="console3d-form" autocomplete="off">
-                <span class="console3d__prompt">&gt;</span>
-                <input
-                  type="text"
-                  id="console3d-input"
-                  class="console3d__input"
-                  placeholder="gõ 'help' rồi Enter…"
-                  spellcheck="false"
-                  autocapitalize="off"
-                  aria-label="Nhập lệnh"
-                />
-                <span class="console3d__cursor" aria-hidden="true"></span>
-              </form>
-            </div>
-          </div>
+          <figure class="hero__card hero__card--b">
+            <img
+              class="hero__card__img"
+              src="assets/img/model-09.jpg"
+              alt="Mặt bằng và hệ thống thiết bị trong nhà"
+              width="1024"
+              height="935"
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption class="hero__card__cap hero__card__cap--mini">Giám sát từ xa</figcaption>
+          </figure>
+
+          <span class="hero__chip hero__chip--tl"><i></i> ESP32 • MQTT</span>
+          <span class="hero__chip hero__chip--br"><i></i> Cảm biến hoạt động</span>
+          <span class="hero__chip hero__chip--bl">Dự án STEM • 2025</span>
         </div>
 
       </div>
@@ -1060,8 +1061,6 @@
 <script src="assets/js/vendor-guard.js"></script>
 <script src="assets/js/core.js"></script>
 <script src="assets/js/motion.js"></script>
-<script src="assets/js/three-house.js"></script>
-<script src="assets/js/console3d.js"></script>
 <script src="assets/js/landing.js"></script>
 <script src="assets/js/boot.js"></script>
 
